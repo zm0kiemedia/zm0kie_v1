@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Straftatenrechner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #141416;
+            --bg-tertiary: #1e1e22;
+            --bg-hover: #28282e;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b95;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.15);
+            --success: #22c55e;
+            --success-glow: rgba(34, 197, 94, 0.15);
+            --warning: #f59e0b;
+            --warning-glow: rgba(245, 158, 11, 0.15);
+            --primary: #3b82f6;
+            --border: #2a2a30;
+            --border-light: #3a3a42;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title i {
+            color: var(--accent);
+        }
+
+        .network-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--accent-glow);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--accent);
+            margin-left: 16px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--accent-hover) 0%, #1d4ed8 100%);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--danger-glow);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-glow);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .btn-success:hover {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Network Selection Page */
+        .network-page {
+            min-height: calc(100vh - 48px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+        }
+
+        .network-page h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .network-page h1 i {
+            color: var(--accent);
+        }
+
+        .network-page .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .network-actions {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .network-list {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .network-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .network-item:hover {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .network-item .name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .network-item .info {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .network-item i {
+            color: var(--text-secondary);
+        }
+
+        .empty-networks {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .empty-networks i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* Calculator Page */
+        .calculator-layout {
+            display: flex;
+            gap: 24px;
+        }
+
+        .calculator-sidebar {
+            width: 400px;
+            flex-shrink: 0;
+        }
+
+        .calculator-main {
+            flex: 1;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .calc-category {
+            margin-bottom: 16px;
+        }
+
+        .calc-category-header {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            padding: 0 8px;
+        }
+
+        .calc-offense-item {
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calc-offense-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .calc-offense-item.selected {
+            background: var(--primary);
+            color: white;
+        }
+
+        .calc-offense-item .name {
+            font-weight: 500;
+        }
+
+        .calc-offense-item .details {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .calc-offense-item.selected .details {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .selected-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .selected-item .info {
+            flex: 1;
+        }
+
+        .selected-item .name {
+            font-weight: 500;
+        }
+
+        .selected-item .details {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .modifiers {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .calc-modifier {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border: 2px solid;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calc-modifier .label {
+            font-size: 12px;
+        }
+
+        .calc-modifier .value {
+            font-weight: bold;
+        }
+
+        .totals-section {
+            margin-top: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .totals-section h4 {
+            margin-bottom: 16px;
+        }
+
+        .totals-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .total-item {
+            text-align: center;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .total-item .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .total-item .value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .total-item .value.jail {
+            color: var(--danger);
+        }
+
+        .total-item .value.fine {
+            color: var(--success);
+        }
+
+        .total-item .value.points {
+            color: var(--warning);
+        }
+
+        .modified-totals {
+            display: none;
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--warning);
+        }
+
+        .modified-totals .modifiers-text {
+            font-size: 12px;
+            color: var(--warning);
+            margin-bottom: 12px;
+        }
+
+        .modified-totals .totals-grid {
+            gap: 12px;
+        }
+
+        .modified-totals .total-item {
+            padding: 8px;
+        }
+
+        .modified-totals .total-item .label {
+            font-size: 11px;
+        }
+
+        .modified-totals .total-item .value {
+            font-size: 20px;
+        }
+
+        .limit-warning {
+            display: none;
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(220, 53, 69, 0.15);
+            border-radius: 8px;
+            border: 2px solid #dc3545;
+            text-align: center;
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .empty-state {
+            padding: 40px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-state p {
+            margin-bottom: 8px;
+        }
+
+        .empty-state .hint {
+            font-size: 12px;
+        }
+
+        .session-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .session-info {
+            display: none;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 2px solid var(--success);
+        }
+
+        .session-info .label {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .session-info .code {
+            font-weight: bold;
+            font-size: 18px;
+            letter-spacing: 2px;
+            color: var(--success);
+        }
+
+        .session-info .status {
+            font-size: 10px;
+            margin-left: 8px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 24px;
+            max-width: 450px;
+            width: 90%;
+        }
+
+        .modal h3 {
+            margin-bottom: 16px;
+        }
+
+        .modal .form-group {
+            margin-bottom: 16px;
+        }
+
+        .modal .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .modal input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-light);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @media (max-width: 900px) {
+            .calculator-layout {
+                flex-direction: column;
+            }
+
+            .calculator-sidebar {
+                width: 100%;
+            }
+
+            .totals-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modifiers {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Network Selection Page -->
+    <div class="page active" id="page-networks">
+        <div class="network-page">
+            <h1><i class="fas fa-calculator"></i> Straftatenrechner</h1>
+            <p class="subtitle">Wähle ein Netzwerk um fortzufahren</p>
+
+            <div class="network-actions">
+                <a href="/network-admin.html" class="btn" style="font-size: 12px; padding: 8px 12px;">
+                    <i class="fas fa-shield-alt"></i> Netzwerk-Verwaltung
+                </a>
+            </div>
+
+            <div class="network-list" id="networkList"></div>
+        </div>
+    </div>
+
+    <!-- Calculator Page -->
+    <div class="page" id="page-calculator">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-calculator"></i>
+                    Straftatenrechner
+                    <span class="network-badge" id="currentNetworkBadge">
+                        <i class="fas fa-network-wired"></i>
+                        <span id="currentNetworkName"></span>
+                    </span>
+                </h1>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div class="session-controls">
+                        <div class="session-info" id="calcSessionInfo">
+                            <span class="label">Session:</span>
+                            <span class="code" id="calcSessionCode"></span>
+                            <span class="status" id="calcSessionStatus"></span>
+                        </div>
+                        <button class="btn btn-primary" id="btnCreateSession" onclick="createCalcSession()">
+                            <i class="fas fa-plus"></i> Session erstellen
+                        </button>
+                        <button class="btn" id="btnJoinSession" onclick="showJoinSessionModal()">
+                            <i class="fas fa-sign-in-alt"></i> Session beitreten
+                        </button>
+                        <button class="btn btn-danger" id="btnLeaveSession" onclick="leaveCalcSession()"
+                            style="display: none;">
+                            <i class="fas fa-sign-out-alt"></i> Verlassen
+                        </button>
+                    </div>
+                    <button class="btn btn-danger" onclick="clearCalculator()">
+                        <i class="fas fa-trash"></i> Alle entfernen
+                    </button>
+                    <button class="btn" onclick="openAdminPanel()">
+                        <i class="fas fa-cog"></i> Admin
+                    </button>
+                    <button class="btn" onclick="leaveNetwork()">
+                        <i class="fas fa-sign-out-alt"></i> Netzwerk wechseln
+                    </button>
+                </div>
+            </div>
+
+            <div class="calculator-layout">
+                <div class="calculator-sidebar">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" id="calcSearch" placeholder="Straftat suchen...">
+                    </div>
+                    <div id="calcOffensesList" style="max-height: calc(100vh - 200px); overflow-y: auto;"></div>
+                </div>
+
+                <div class="calculator-main">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Ausgewählte Straftaten</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="calcSelectedList"></div>
+
+                            <div class="modifiers">
+                                <button class="calc-modifier" id="btnCalcEigenJudikative"
+                                    onclick="toggleCalcModifier('eigenJudikative')"
+                                    style="border-color: #17a2b8; color: #17a2b8;">
+                                    <div class="label">Eigen Judikative</div>
+                                    <div class="value">-10% Haft</div>
+                                </button>
+                                <button class="calc-modifier" id="btnCalcKrimiStatus"
+                                    onclick="toggleCalcModifier('krimiStatus')"
+                                    style="border-color: #fd7e14; color: #fd7e14;">
+                                    <div class="label">Krimi Status</div>
+                                    <div class="value">x3 Geld</div>
+                                </button>
+                                <button class="calc-modifier" id="btnCalcTerrorStatus"
+                                    onclick="toggleCalcModifier('terrorStatus')"
+                                    style="border-color: #dc3545; color: #dc3545;">
+                                    <div class="label">Terror Status</div>
+                                    <div class="value">x5 Geld</div>
+                                </button>
+                            </div>
+
+                            <div class="totals-section">
+                                <h4>Gesamtstrafe</h4>
+                                <div class="totals-grid">
+                                    <div class="total-item">
+                                        <div class="label">Hafteinheiten</div>
+                                        <div class="value jail" id="calcTotalJail">0</div>
+                                    </div>
+                                    <div class="total-item">
+                                        <div class="label">Geldstrafe</div>
+                                        <div class="value fine" id="calcTotalFine">$0</div>
+                                    </div>
+                                    <div class="total-item">
+                                        <div class="label">StVO-Punkte</div>
+                                        <div class="value points" id="calcTotalPoints">0</div>
+                                    </div>
+                                </div>
+
+                                <div class="modified-totals" id="calcModifiedTotals">
+                                    <div class="modifiers-text" id="calcModifiersText">Aktive Modifikatoren:</div>
+                                    <div class="totals-grid">
+                                        <div class="total-item">
+                                            <div class="label">Haft (mod.)</div>
+                                            <div class="value jail" id="calcTotalJailMod">0</div>
+                                        </div>
+                                        <div class="total-item">
+                                            <div class="label">Geld (mod.)</div>
+                                            <div class="value fine" id="calcTotalFineMod">$0</div>
+                                        </div>
+                                        <div class="total-item">
+                                            <div class="label">Punkte (mod.)</div>
+                                            <div class="value points" id="calcTotalPointsMod">0</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="limit-warning" id="calcLimitWarning">
+                                    ⚠️ Über 50.000$ und/oder 90 Minuten! NUR mit DOJ-Erlaubnis (oder
+                                    Krimi/Terrorstatus)!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Network Modal -->
+    <div class="modal-overlay" id="joinNetworkModal">
+        <div class="modal">
+            <h3><i class="fas fa-sign-in-alt" style="color: var(--accent); margin-right: 8px;"></i>Netzwerk beitreten
+            </h3>
+            <input type="hidden" id="joinNetworkId">
+            <p style="margin-bottom: 16px; color: var(--text-secondary);">
+                Netzwerk: <strong id="joinNetworkName" style="color: var(--text-primary);"></strong>
+            </p>
+            <div class="form-group">
+                <label>Zugangs-Passwort</label>
+                <input type="password" id="joinNetworkPassword" placeholder="Passwort eingeben">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeModal('joinNetworkModal')">Abbrechen</button>
+                <button class="btn btn-primary" onclick="joinNetwork()">
+                    <i class="fas fa-sign-in-alt"></i> Beitreten
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Password Modal -->
+    <div class="modal-overlay" id="adminPasswordModal">
+        <div class="modal">
+            <h3><i class="fas fa-lock" style="color: var(--warning); margin-right: 8px;"></i>Admin-Zugang</h3>
+            <div class="form-group">
+                <label>Admin-Passwort</label>
+                <input type="password" id="adminPassword" placeholder="Admin-Passwort eingeben">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeModal('adminPasswordModal')">Abbrechen</button>
+                <button class="btn btn-primary" onclick="checkAdminPassword()">
+                    <i class="fas fa-unlock"></i> Anmelden
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Session Modal -->
+    <div class="modal-overlay" id="calcSessionModal">
+        <div class="modal">
+            <h3>Session beitreten</h3>
+            <div class="form-group">
+                <label>Session-Code</label>
+                <input type="text" id="joinSessionCode" maxlength="4" placeholder="0000"
+                    style="text-align: center; letter-spacing: 8px; font-size: 24px;">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeModal('calcSessionModal')">Abbrechen</button>
+                <button class="btn btn-primary" onclick="joinCalcSession()">Beitreten</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Created Modal -->
+    <div class="modal-overlay" id="sessionCreatedModal">
+        <div class="modal">
+            <h3>Session erstellt!</h3>
+            <p style="text-align: center; margin-bottom: 10px;">Teilen Sie diesen Code mit Ihrem Kollegen:</p>
+            <div
+                style="text-align: center; letter-spacing: 8px; font-size: 32px; font-weight: bold; margin-bottom: 24px; color: #17a2b8;">
+                <span id="createdSessionCodeDisplay"></span>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="closeModal('sessionCreatedModal')">Verstanden</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+
+        // Current state
+        let currentNetwork = null;
+        let calcSelectedOffenses = [];
+        let calcModifiers = { eigenJudikative: false, krimiStatus: false, terrorStatus: false };
+        let allCalcOffenses = [];
+        let calcSessionCode = null;
+        let calcWebSocket = null;
+        let calcSyncEnabled = false;
+
+        // API Helper
+        async function api(endpoint, options = {}) {
+            const res = await fetch(API_URL + endpoint, {
+                ...options,
+                headers: { 'Content-Type': 'application/json', ...options.headers }
+            });
+            if (!res.ok) {
+                const error = await res.json().catch(() => ({ error: 'Unbekannter Fehler' }));
+                throw new Error(error.error || 'Request fehlgeschlagen');
+            }
+            return res.json();
+        }
+
+        // Page navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        // Modal functions
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // ==================== NETWORK FUNCTIONS ====================
+
+        async function loadNetworks() {
+            try {
+                const networks = await api('/api/networks');
+                renderNetworkList(networks);
+            } catch (err) {
+                console.error('Failed to load networks:', err);
+            }
+        }
+
+        function renderNetworkList(networks) {
+            const container = document.getElementById('networkList');
+            if (networks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-networks">
+                        <i class="fas fa-network-wired"></i>
+                        <p>Noch keine Netzwerke vorhanden</p>
+                        <p style="font-size: 12px;">Bitte einen Admin kontaktieren um ein Netzwerk zu erstellen</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = networks.map(n => `
+                <div class="network-item" onclick="showJoinNetworkModal('${n.id}', '${n.name}')">
+                    <div>
+                        <div class="name">${n.name}</div>
+                        <div class="info">ID: ${n.id}</div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            `).join('');
+        }
+
+        function showJoinNetworkModal(id, name) {
+            document.getElementById('joinNetworkId').value = id;
+            document.getElementById('joinNetworkName').textContent = name;
+            document.getElementById('joinNetworkPassword').value = '';
+            openModal('joinNetworkModal');
+            setTimeout(() => document.getElementById('joinNetworkPassword').focus(), 100);
+        }
+
+        async function joinNetwork() {
+            const id = document.getElementById('joinNetworkId').value;
+            const password = document.getElementById('joinNetworkPassword').value;
+
+            if (!password) {
+                alert('Bitte Passwort eingeben');
+                return;
+            }
+
+            try {
+                const result = await api(`/api/networks/${id}/join`, {
+                    method: 'POST',
+                    body: JSON.stringify({ password })
+                });
+
+                closeModal('joinNetworkModal');
+                currentNetwork = { id: result.id, name: result.name };
+                sessionStorage.setItem('currentNetwork', JSON.stringify(currentNetwork));
+                enterCalculator();
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+            }
+        }
+
+        function leaveNetwork() {
+            currentNetwork = null;
+            sessionStorage.removeItem('currentNetwork');
+            sessionStorage.removeItem('adminAuth');
+            leaveCalcSession();
+            showPage('page-networks');
+            loadNetworks();
+        }
+
+        function enterCalculator() {
+            document.getElementById('currentNetworkName').textContent = currentNetwork.name;
+            showPage('page-calculator');
+            loadCalcOffenses();
+            updateCalcSelectedList();
+        }
+
+        // ==================== ADMIN FUNCTIONS ====================
+
+        function openAdminPanel() {
+            if (sessionStorage.getItem('adminAuth') === currentNetwork.id) {
+                window.location.href = '/admin.html';
+                return;
+            }
+            document.getElementById('adminPassword').value = '';
+            openModal('adminPasswordModal');
+            setTimeout(() => document.getElementById('adminPassword').focus(), 100);
+        }
+
+        async function checkAdminPassword() {
+            const password = document.getElementById('adminPassword').value;
+
+            try {
+                await api(`/api/networks/${currentNetwork.id}/admin`, {
+                    method: 'POST',
+                    body: JSON.stringify({ adminPassword: password })
+                });
+
+                sessionStorage.setItem('adminAuth', currentNetwork.id);
+                closeModal('adminPasswordModal');
+                window.location.href = '/admin.html';
+            } catch (err) {
+                alert('Falsches Admin-Passwort!');
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('adminPassword').focus();
+            }
+        }
+
+        // ==================== CALCULATOR FUNCTIONS ====================
+
+        function connectCalcWebSocket(code) {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${wsProtocol}//${window.location.host}`;
+
+            calcWebSocket = new WebSocket(wsUrl);
+
+            calcWebSocket.onopen = () => {
+                calcWebSocket.send(JSON.stringify({ type: 'join', code: code, networkId: currentNetwork.id }));
+                updateCalcSessionStatus('Verbunden', 'var(--success)');
+            };
+
+            calcWebSocket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'sync') {
+                        calcSyncEnabled = false;
+                        calcSelectedOffenses = data.selected_offenses || [];
+                        if (data.modifiers) {
+                            calcModifiers = data.modifiers;
+                            updateModifierButtons();
+                        }
+                        updateCalcSelectedList();
+                        calculateCalcTotals();
+                        reRenderOffenseList();
+                        calcSyncEnabled = true;
+                    }
+                } catch (err) {
+                    console.error('WebSocket message error:', err);
+                }
+            };
+
+            calcWebSocket.onclose = () => updateCalcSessionStatus('Getrennt', 'var(--danger)');
+            calcWebSocket.onerror = () => updateCalcSessionStatus('Fehler', 'var(--danger)');
+        }
+
+        function updateModifierButtons() {
+            ['eigenJudikative', 'krimiStatus', 'terrorStatus'].forEach(mod => {
+                const btn = document.getElementById('btnCalc' + mod.charAt(0).toUpperCase() + mod.slice(1));
+                if (btn) {
+                    if (calcModifiers[mod]) {
+                        btn.style.background = btn.style.borderColor;
+                        btn.style.color = '#fff';
+                    } else {
+                        btn.style.background = 'transparent';
+                        btn.style.color = btn.style.borderColor;
+                    }
+                }
+            });
+        }
+
+        function sendCalcUpdate() {
+            if (calcWebSocket && calcWebSocket.readyState === WebSocket.OPEN && calcSyncEnabled) {
+                calcWebSocket.send(JSON.stringify({
+                    type: 'update',
+                    selected_offenses: calcSelectedOffenses,
+                    modifiers: calcModifiers,
+                    notes: ''
+                }));
+
+                if (calcSessionCode && currentNetwork) {
+                    api(`/api/networks/${currentNetwork.id}/calc-sessions/${calcSessionCode}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            selected_offenses: calcSelectedOffenses,
+                            modifiers: calcModifiers,
+                            notes: ''
+                        })
+                    }).catch(err => console.error('Session save error:', err));
+                }
+            }
+        }
+
+        function updateCalcSessionStatus(text, color) {
+            const statusEl = document.getElementById('calcSessionStatus');
+            if (statusEl) {
+                statusEl.textContent = text;
+                statusEl.style.color = color;
+            }
+        }
+
+        async function createCalcSession() {
+            try {
+                const result = await api(`/api/networks/${currentNetwork.id}/calc-sessions`, { method: 'POST' });
+                calcSessionCode = result.code;
+
+                document.getElementById('calcSessionInfo').style.display = 'block';
+                document.getElementById('calcSessionCode').textContent = calcSessionCode;
+                document.getElementById('btnCreateSession').style.display = 'none';
+                document.getElementById('btnJoinSession').style.display = 'none';
+                document.getElementById('btnLeaveSession').style.display = 'inline-flex';
+
+                connectCalcWebSocket(calcSessionCode);
+                calcSyncEnabled = true;
+
+                document.getElementById('createdSessionCodeDisplay').textContent = calcSessionCode;
+                openModal('sessionCreatedModal');
+            } catch (err) {
+                alert('Fehler beim Erstellen der Session: ' + err.message);
+            }
+        }
+
+        function showJoinSessionModal() {
+            document.getElementById('joinSessionCode').value = '';
+            openModal('calcSessionModal');
+            setTimeout(() => document.getElementById('joinSessionCode').focus(), 100);
+        }
+
+        async function joinCalcSession() {
+            const code = document.getElementById('joinSessionCode').value;
+            if (code.length !== 4) {
+                alert('Bitte einen 4-stelligen Code eingeben');
+                return;
+            }
+
+            closeModal('calcSessionModal');
+
+            try {
+                const session = await api(`/api/networks/${currentNetwork.id}/calc-sessions/${code}`);
+                calcSessionCode = code;
+
+                calcSelectedOffenses = session.selected_offenses || [];
+                if (session.modifiers) {
+                    calcModifiers = session.modifiers;
+                    updateModifierButtons();
+                }
+
+                updateCalcSelectedList();
+                calculateCalcTotals();
+                reRenderOffenseList();
+
+                document.getElementById('calcSessionInfo').style.display = 'block';
+                document.getElementById('calcSessionCode').textContent = calcSessionCode;
+                document.getElementById('btnCreateSession').style.display = 'none';
+                document.getElementById('btnJoinSession').style.display = 'none';
+                document.getElementById('btnLeaveSession').style.display = 'inline-flex';
+
+                connectCalcWebSocket(calcSessionCode);
+                calcSyncEnabled = true;
+            } catch (err) {
+                alert('Session nicht gefunden!');
+            }
+        }
+
+        function leaveCalcSession() {
+            if (calcWebSocket) {
+                calcWebSocket.close();
+                calcWebSocket = null;
+            }
+
+            calcSessionCode = null;
+            calcSyncEnabled = false;
+
+            document.getElementById('calcSessionInfo').style.display = 'none';
+            document.getElementById('btnCreateSession').style.display = 'inline-flex';
+            document.getElementById('btnJoinSession').style.display = 'inline-flex';
+            document.getElementById('btnLeaveSession').style.display = 'none';
+        }
+
+        async function loadCalcOffenses() {
+            if (!currentNetwork) return;
+            try {
+                const laws = await api(`/api/networks/${currentNetwork.id}/laws`);
+                allCalcOffenses = laws.map(law => ({
+                    id: law.id,
+                    name: law.title,
+                    category: law.category,
+                    jail_units: law.jail_max || law.jail_min || 0,
+                    fine: law.fine_max || law.fine_min || 0,
+                    stvo_points: law.points || 0
+                }));
+                reRenderOffenseList();
+            } catch (err) {
+                console.error('Failed to load calculator offenses:', err);
+            }
+        }
+
+        function reRenderOffenseList() {
+            const categories = {};
+            allCalcOffenses.forEach(law => {
+                if (!categories[law.category]) categories[law.category] = [];
+                categories[law.category].push(law);
+            });
+            renderCalcOffenses(categories, document.getElementById('calcSearch')?.value || '');
+        }
+
+        function renderCalcOffenses(categories, filter = '') {
+            const container = document.getElementById('calcOffensesList');
+            const filterLower = filter.toLowerCase();
+
+            let html = '';
+            Object.keys(categories).sort().forEach(catName => {
+                const offenses = categories[catName].filter(o =>
+                    !filter || o.name.toLowerCase().includes(filterLower) || catName.toLowerCase().includes(filterLower)
+                );
+
+                if (offenses.length === 0) return;
+
+                html += `
+                    <div class="calc-category">
+                        <div class="calc-category-header">${catName}</div>
+                        ${offenses.map(o => {
+                    const isSelected = calcSelectedOffenses.some(s => s.id === o.id);
+                    return `
+                                <div class="calc-offense-item ${isSelected ? 'selected' : ''}" onclick="toggleCalcOffense(${o.id})">
+                                    <div class="name">${o.name}</div>
+                                    <div class="details">
+                                        ${o.jail_units ? o.jail_units + ' HE' : ''} ${o.fine ? '| $' + o.fine.toLocaleString() : ''} ${o.stvo_points ? '| ' + o.stvo_points + ' Pkt' : ''}
+                                    </div>
+                                </div>
+                            `;
+                }).join('')}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html || '<div class="empty-state">Keine Straftaten gefunden</div>';
+        }
+
+        document.getElementById('calcSearch')?.addEventListener('input', (e) => reRenderOffenseList());
+
+        function toggleCalcOffense(id) {
+            const offense = allCalcOffenses.find(o => o.id === id);
+            if (!offense) return;
+
+            const existingIndex = calcSelectedOffenses.findIndex(s => s.id === id);
+            if (existingIndex >= 0) {
+                calcSelectedOffenses.splice(existingIndex, 1);
+            } else {
+                calcSelectedOffenses.push({ ...offense });
+            }
+
+            updateCalcSelectedList();
+            calculateCalcTotals();
+            reRenderOffenseList();
+            sendCalcUpdate();
+        }
+
+        function updateCalcSelectedList() {
+            const container = document.getElementById('calcSelectedList');
+
+            if (calcSelectedOffenses.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-balance-scale"></i>
+                        <p>Keine Straftaten ausgewählt</p>
+                        <p class="hint">Wählen Sie Straftaten aus der Liste links aus</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = calcSelectedOffenses.map(o => `
+                <div class="selected-item">
+                    <div class="info">
+                        <div class="name">${o.name}</div>
+                        <div class="details">
+                            ${o.jail_units ? o.jail_units + ' HE' : ''} ${o.fine ? '| $' + o.fine.toLocaleString() : ''} ${o.stvo_points ? '| ' + o.stvo_points + ' Pkt' : ''}
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" style="padding: 4px 8px;" onclick="removeCalcOffense(${o.id})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function removeCalcOffense(id) {
+            calcSelectedOffenses = calcSelectedOffenses.filter(o => o.id !== id);
+            updateCalcSelectedList();
+            calculateCalcTotals();
+            reRenderOffenseList();
+            sendCalcUpdate();
+        }
+
+        function toggleCalcModifier(modifier) {
+            if (modifier === 'krimiStatus' && calcModifiers.terrorStatus) {
+                calcModifiers.terrorStatus = false;
+                document.getElementById('btnCalcTerrorStatus').style.background = 'transparent';
+                document.getElementById('btnCalcTerrorStatus').style.color = '#dc3545';
+            }
+            if (modifier === 'terrorStatus' && calcModifiers.krimiStatus) {
+                calcModifiers.krimiStatus = false;
+                document.getElementById('btnCalcKrimiStatus').style.background = 'transparent';
+                document.getElementById('btnCalcKrimiStatus').style.color = '#fd7e14';
+            }
+
+            calcModifiers[modifier] = !calcModifiers[modifier];
+
+            const btnId = 'btnCalc' + modifier.charAt(0).toUpperCase() + modifier.slice(1);
+            const btn = document.getElementById(btnId);
+            if (calcModifiers[modifier]) {
+                if (modifier === 'eigenJudikative') btn.style.background = '#17a2b8';
+                if (modifier === 'krimiStatus') btn.style.background = '#fd7e14';
+                if (modifier === 'terrorStatus') btn.style.background = '#dc3545';
+                btn.style.color = 'white';
+            } else {
+                btn.style.background = 'transparent';
+                if (modifier === 'eigenJudikative') btn.style.color = '#17a2b8';
+                if (modifier === 'krimiStatus') btn.style.color = '#fd7e14';
+                if (modifier === 'terrorStatus') btn.style.color = '#dc3545';
+            }
+
+            calculateCalcTotals();
+            sendCalcUpdate();
+        }
+
+        function calculateCalcTotals() {
+            let totalJail = 0, totalFine = 0, totalPoints = 0;
+
+            calcSelectedOffenses.forEach(o => {
+                totalJail += (o.jail_units || 0);
+                totalFine += (o.fine || 0);
+                totalPoints += (o.stvo_points || 0);
+            });
+
+            document.getElementById('calcTotalJail').textContent = totalJail;
+            document.getElementById('calcTotalFine').textContent = '$' + totalFine.toLocaleString();
+            document.getElementById('calcTotalPoints').textContent = totalPoints;
+
+            let modJail = totalJail, modFine = totalFine, modPoints = totalPoints;
+            let modifiersText = [];
+
+            if (calcModifiers.eigenJudikative) {
+                modJail = Math.floor(modJail * 0.9);
+                modifiersText.push('Eigen Judikative (-10% Haft)');
+            }
+            if (calcModifiers.krimiStatus) {
+                modFine = modFine * 3;
+                modifiersText.push('Krimi Status (x3 Geld)');
+            }
+            if (calcModifiers.terrorStatus) {
+                modFine = modFine * 5;
+                modifiersText.push('Terror Status (x5 Geld)');
+            }
+
+            const modifiedSection = document.getElementById('calcModifiedTotals');
+            if (modifiersText.length > 0) {
+                modifiedSection.style.display = 'block';
+                document.getElementById('calcModifiersText').textContent = 'Aktive Modifikatoren: ' + modifiersText.join(', ');
+                document.getElementById('calcTotalJailMod').textContent = modJail;
+                document.getElementById('calcTotalFineMod').textContent = '$' + modFine.toLocaleString();
+                document.getElementById('calcTotalPointsMod').textContent = modPoints;
+            } else {
+                modifiedSection.style.display = 'none';
+            }
+
+            const finalFine = modifiersText.length > 0 ? modFine : totalFine;
+            const finalJail = modifiersText.length > 0 ? modJail : totalJail;
+            const limitWarning = document.getElementById('calcLimitWarning');
+
+            if ((finalFine > 50000 || finalJail > 90) && !calcModifiers.krimiStatus && !calcModifiers.terrorStatus) {
+                limitWarning.style.display = 'block';
+            } else {
+                limitWarning.style.display = 'none';
+            }
+        }
+
+        function clearCalculator() {
+            calcSelectedOffenses = [];
+            calcModifiers = { eigenJudikative: false, krimiStatus: false, terrorStatus: false };
+
+            document.getElementById('btnCalcEigenJudikative').style.background = 'transparent';
+            document.getElementById('btnCalcEigenJudikative').style.color = '#17a2b8';
+            document.getElementById('btnCalcKrimiStatus').style.background = 'transparent';
+            document.getElementById('btnCalcKrimiStatus').style.color = '#fd7e14';
+            document.getElementById('btnCalcTerrorStatus').style.background = 'transparent';
+            document.getElementById('btnCalcTerrorStatus').style.color = '#dc3545';
+
+            updateCalcSelectedList();
+            calculateCalcTotals();
+            reRenderOffenseList();
+            document.getElementById('calcSearch').value = '';
+            sendCalcUpdate();
+        }
+
+        // ==================== INITIALIZATION ====================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if we have a saved network session
+            const savedNetwork = sessionStorage.getItem('currentNetwork');
+            if (savedNetwork) {
+                currentNetwork = JSON.parse(savedNetwork);
+                enterCalculator();
+            } else {
+                loadNetworks();
+            }
+
+            // Enter key handlers
+            document.getElementById('adminPassword')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') checkAdminPassword();
+            });
+            document.getElementById('joinNetworkPassword')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') joinNetwork();
+            });
+            document.getElementById('joinSessionCode')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') joinCalcSession();
+            });
+        });
+
+        // Close modals on escape or overlay click
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+            }
+        });
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+
+</html>
