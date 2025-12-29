@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Straftatenrechner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #141416;
+            --bg-tertiary: #1e1e22;
+            --bg-hover: #28282e;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b95;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.15);
+            --success: #22c55e;
+            --success-glow: rgba(34, 197, 94, 0.15);
+            --warning: #f59e0b;
+            --warning-glow: rgba(245, 158, 11, 0.15);
+            --primary: #3b82f6;
+            --border: #2a2a30;
+            --border-light: #3a3a42;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title i { color: var(--accent); }
+
+        .network-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--warning-glow);
+            border: 1px solid var(--warning);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--warning);
+            margin-left: 16px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .btn:hover { background: var(--bg-hover); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--accent-hover) 0%, #1d4ed8 100%);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--danger-glow);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover { background: var(--danger); color: white; }
+
+        .btn-success {
+            background: var(--success-glow);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .btn-success:hover { background: var(--success); color: white; }
+
+        .btn-sm { padding: 6px 12px; font-size: 13px; }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 10px;
+            width: fit-content;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .tab:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+        .tab.active { background: var(--accent); color: white; }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+
+        .card-body { padding: 20px; }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        .table-container { overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        tr:hover td { background: var(--bg-tertiary); }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-danger { background: var(--danger-glow); color: var(--danger); }
+        .badge-success { background: var(--success-glow); color: var(--success); }
+
+        .actions { display: flex; gap: 8px; }
+
+        .search-container { position: relative; margin-bottom: 16px; }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 { font-size: 18px; }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 4px;
+        }
+
+        .modal-close:hover { color: var(--text-primary); }
+
+        .modal-body { padding: 20px; }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .category-item .name { font-weight: 500; }
+        .category-item .count { font-size: 12px; color: var(--text-secondary); }
+
+        .empty-state {
+            padding: 40px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+        .checkbox-wrapper { display: flex; align-items: center; gap: 8px; }
+        .checkbox-wrapper input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+
+        select.form-control { cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-cog"></i>
+                Admin-Panel
+                <span class="network-badge" id="networkBadge">
+                    <i class="fas fa-network-wired"></i>
+                    <span id="networkName"></span>
+                </span>
+            </h1>
+            <a href="/" class="btn">
+                <i class="fas fa-arrow-left"></i> Zurueck zum Rechner
+            </a>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('laws')">
+                <i class="fas fa-gavel"></i> Gesetze
+            </div>
+            <div class="tab" onclick="switchTab('categories')">
+                <i class="fas fa-folder"></i> Kategorien
+            </div>
+        </div>
+
+        <!-- Laws Tab -->
+        <div class="tab-content active" id="tab-laws">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-gavel" style="margin-right: 8px; color: var(--accent);"></i>Gesetze verwalten</h3>
+                    <button class="btn btn-primary" onclick="openLawModal()">
+                        <i class="fas fa-plus"></i> Neues Gesetz
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" id="lawSearch" placeholder="Gesetz suchen..." oninput="filterLaws()">
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Kategorie</th>
+                                    <th>Paragraph</th>
+                                    <th>Titel</th>
+                                    <th>Geldstrafe</th>
+                                    <th>Haft (HE)</th>
+                                    <th>Punkte</th>
+                                    <th>Verbrechen</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lawsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories Tab -->
+        <div class="tab-content" id="tab-categories">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-folder" style="margin-right: 8px; color: var(--warning);"></i>Kategorien verwalten</h3>
+                    <button class="btn btn-primary" onclick="openCategoryModal()">
+                        <i class="fas fa-plus"></i> Neue Kategorie
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="categoriesList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Law Modal -->
+    <div class="modal-overlay" id="lawModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="lawModalTitle">Neues Gesetz</h3>
+                <button class="modal-close" onclick="closeModal('lawModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="lawId">
+                <div class="form-group">
+                    <label>Kategorie *</label>
+                    <select class="form-control" id="lawCategory" required>
+                        <option value="">Kategorie waehlen...</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Paragraph *</label>
+                        <input type="text" class="form-control" id="lawParagraph" placeholder="z.B. § 1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Titel *</label>
+                        <input type="text" class="form-control" id="lawTitle" placeholder="z.B. Koerperverletzung" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Beschreibung</label>
+                    <textarea class="form-control" id="lawDescription" rows="3" placeholder="Optionale Beschreibung..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Geldstrafe Min ($)</label>
+                        <input type="number" class="form-control" id="lawFineMin" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Geldstrafe Max ($)</label>
+                        <input type="number" class="form-control" id="lawFineMax" placeholder="0" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Hafteinheiten Min</label>
+                        <input type="number" class="form-control" id="lawJailMin" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Hafteinheiten Max</label>
+                        <input type="number" class="form-control" id="lawJailMax" placeholder="0" min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>StVO-Punkte</label>
+                        <input type="number" class="form-control" id="lawPoints" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <div class="checkbox-wrapper" style="height: 42px; display: flex; align-items: center;">
+                            <input type="checkbox" id="lawIsFelony">
+                            <label for="lawIsFelony" style="margin: 0; color: var(--text-primary);">Ist ein Verbrechen</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('lawModal')">Abbrechen</button>
+                <button class="btn btn-primary" onclick="saveLaw()">
+                    <i class="fas fa-save"></i> Speichern
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 id="categoryModalTitle">Neue Kategorie</h3>
+                <button class="modal-close" onclick="closeModal('categoryModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="categoryId">
+                <div class="form-group">
+                    <label>Kategorie-Name *</label>
+                    <input type="text" class="form-control" id="categoryName" placeholder="z.B. Verkehrsdelikte" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('categoryModal')">Abbrechen</button>
+                <button class="btn btn-primary" onclick="saveCategory()">
+                    <i class="fas fa-save"></i> Speichern
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Loeschen bestaetigen</h3>
+                <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteMessage">Sind Sie sicher, dass Sie diesen Eintrag loeschen moechten?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('deleteModal')">Abbrechen</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash"></i> Loeschen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+        let currentNetwork = null;
+        let allLaws = [];
+        let allCategories = [];
+
+        // API Helper
+        async function api(endpoint, options = {}) {
+            const res = await fetch(API_URL + endpoint, {
+                ...options,
+                headers: { 'Content-Type': 'application/json', ...options.headers }
+            });
+            if (!res.ok) {
+                const error = await res.json().catch(() => ({ error: 'Unbekannter Fehler' }));
+                throw new Error(error.error || 'Request fehlgeschlagen');
+            }
+            return res.json();
+        }
+
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab:nth-child(${tab === 'laws' ? 1 : 2})`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        // Modal functions
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // Load data
+        async function loadLaws() {
+            try {
+                allLaws = await api(`/api/networks/${currentNetwork.id}/laws`);
+                renderLaws();
+            } catch (err) {
+                console.error('Failed to load laws:', err);
+            }
+        }
+
+        async function loadCategories() {
+            try {
+                allCategories = await api(`/api/networks/${currentNetwork.id}/law-categories`);
+                renderCategories();
+                updateCategorySelect();
+            } catch (err) {
+                console.error('Failed to load categories:', err);
+            }
+        }
+
+        function renderLaws() {
+            const search = document.getElementById('lawSearch').value.toLowerCase();
+            const filtered = allLaws.filter(law =>
+                !search ||
+                law.title.toLowerCase().includes(search) ||
+                law.paragraph.toLowerCase().includes(search) ||
+                law.category.toLowerCase().includes(search)
+            );
+
+            const tbody = document.getElementById('lawsTable');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Keine Gesetze gefunden</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(law => `
+                <tr>
+                    <td>${law.category}</td>
+                    <td>${law.paragraph}</td>
+                    <td>${law.title}</td>
+                    <td>$${law.fine_min.toLocaleString()} - $${law.fine_max.toLocaleString()}</td>
+                    <td>${law.jail_min} - ${law.jail_max}</td>
+                    <td>${law.points}</td>
+                    <td>${law.is_felony ? '<span class="badge badge-danger">Ja</span>' : '<span class="badge badge-success">Nein</span>'}</td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-sm" onclick="editLaw(${law.id})" title="Bearbeiten">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="confirmDeleteLaw(${law.id})" title="Loeschen">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesList');
+            const categoryCounts = {};
+            allLaws.forEach(law => {
+                categoryCounts[law.category] = (categoryCounts[law.category] || 0) + 1;
+            });
+
+            if (allCategories.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        <p>Keine Kategorien vorhanden</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = allCategories.map(cat => `
+                <div class="category-item">
+                    <div>
+                        <div class="name">${cat}</div>
+                        <div class="count">${categoryCounts[cat] || 0} Gesetze</div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-sm" onclick="editCategory('${cat}')" title="Bearbeiten">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDeleteCategory('${cat}')" title="Loeschen">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateCategorySelect() {
+            const select = document.getElementById('lawCategory');
+            select.innerHTML = '<option value="">Kategorie waehlen...</option>' +
+                allCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        }
+
+        function filterLaws() { renderLaws(); }
+
+        // Law CRUD
+        function openLawModal(law = null) {
+            document.getElementById('lawModalTitle').textContent = law ? 'Gesetz bearbeiten' : 'Neues Gesetz';
+            document.getElementById('lawId').value = law?.id || '';
+            document.getElementById('lawCategory').value = law?.category || '';
+            document.getElementById('lawParagraph').value = law?.paragraph || '';
+            document.getElementById('lawTitle').value = law?.title || '';
+            document.getElementById('lawDescription').value = law?.description || '';
+            document.getElementById('lawFineMin').value = law?.fine_min || '';
+            document.getElementById('lawFineMax').value = law?.fine_max || '';
+            document.getElementById('lawJailMin').value = law?.jail_min || '';
+            document.getElementById('lawJailMax').value = law?.jail_max || '';
+            document.getElementById('lawPoints').value = law?.points || '';
+            document.getElementById('lawIsFelony').checked = law?.is_felony || false;
+            openModal('lawModal');
+        }
+
+        function editLaw(id) {
+            const law = allLaws.find(l => l.id === id);
+            if (law) openLawModal(law);
+        }
+
+        async function saveLaw() {
+            const id = document.getElementById('lawId').value;
+            const data = {
+                category: document.getElementById('lawCategory').value,
+                paragraph: document.getElementById('lawParagraph').value,
+                title: document.getElementById('lawTitle').value,
+                description: document.getElementById('lawDescription').value,
+                fine_min: parseInt(document.getElementById('lawFineMin').value) || 0,
+                fine_max: parseInt(document.getElementById('lawFineMax').value) || 0,
+                jail_min: parseInt(document.getElementById('lawJailMin').value) || 0,
+                jail_max: parseInt(document.getElementById('lawJailMax').value) || 0,
+                points: parseInt(document.getElementById('lawPoints').value) || 0,
+                is_felony: document.getElementById('lawIsFelony').checked
+            };
+
+            if (!data.category || !data.paragraph || !data.title) {
+                alert('Bitte fuellen Sie alle Pflichtfelder aus.');
+                return;
+            }
+
+            try {
+                if (id) {
+                    await api(`/api/networks/${currentNetwork.id}/laws/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+                } else {
+                    await api(`/api/networks/${currentNetwork.id}/laws`, { method: 'POST', body: JSON.stringify(data) });
+                }
+                closeModal('lawModal');
+                loadLaws();
+                loadCategories();
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+            }
+        }
+
+        function confirmDeleteLaw(id) {
+            const law = allLaws.find(l => l.id === id);
+            document.getElementById('deleteMessage').textContent = `Sind Sie sicher, dass Sie "${law.paragraph} ${law.title}" loeschen moechten?`;
+            document.getElementById('confirmDeleteBtn').onclick = () => deleteLaw(id);
+            openModal('deleteModal');
+        }
+
+        async function deleteLaw(id) {
+            try {
+                await api(`/api/networks/${currentNetwork.id}/laws/${id}`, { method: 'DELETE' });
+                closeModal('deleteModal');
+                loadLaws();
+                loadCategories();
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+            }
+        }
+
+        // Category CRUD
+        function openCategoryModal(name = null) {
+            document.getElementById('categoryModalTitle').textContent = name ? 'Kategorie bearbeiten' : 'Neue Kategorie';
+            document.getElementById('categoryId').value = name || '';
+            document.getElementById('categoryName').value = name || '';
+            openModal('categoryModal');
+        }
+
+        function editCategory(name) { openCategoryModal(name); }
+
+        async function saveCategory() {
+            const oldName = document.getElementById('categoryId').value;
+            const newName = document.getElementById('categoryName').value.trim();
+
+            if (!newName) {
+                alert('Bitte geben Sie einen Kategorie-Namen ein.');
+                return;
+            }
+
+            try {
+                if (oldName) {
+                    await api(`/api/networks/${currentNetwork.id}/law-categories/rename`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ oldName, newName })
+                    });
+                } else {
+                    await api(`/api/networks/${currentNetwork.id}/law-categories`, {
+                        method: 'POST',
+                        body: JSON.stringify({ name: newName })
+                    });
+                }
+                closeModal('categoryModal');
+                loadLaws();
+                loadCategories();
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+            }
+        }
+
+        function confirmDeleteCategory(name) {
+            const count = allLaws.filter(l => l.category === name).length;
+            if (count > 0) {
+                alert(`Diese Kategorie enthaelt ${count} Gesetze und kann nicht geloescht werden.`);
+                return;
+            }
+            document.getElementById('deleteMessage').textContent = `Sind Sie sicher, dass Sie die Kategorie "${name}" loeschen moechten?`;
+            document.getElementById('confirmDeleteBtn').onclick = () => deleteCategory(name);
+            openModal('deleteModal');
+        }
+
+        async function deleteCategory(name) {
+            try {
+                await api(`/api/networks/${currentNetwork.id}/law-categories/${encodeURIComponent(name)}`, { method: 'DELETE' });
+                closeModal('deleteModal');
+                loadCategories();
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check authentication
+            const savedNetwork = sessionStorage.getItem('currentNetwork');
+            const adminAuth = sessionStorage.getItem('adminAuth');
+
+            if (!savedNetwork || !adminAuth) {
+                window.location.href = '/';
+                return;
+            }
+
+            currentNetwork = JSON.parse(savedNetwork);
+
+            if (adminAuth !== currentNetwork.id) {
+                window.location.href = '/';
+                return;
+            }
+
+            document.getElementById('networkName').textContent = currentNetwork.name;
+            loadLaws();
+            loadCategories();
+        });
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+            }
+        });
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>

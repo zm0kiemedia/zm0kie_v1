@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netzwerk-Verwaltung | Straftatenrechner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #141416;
+            --bg-tertiary: #1e1e22;
+            --bg-hover: #28282e;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b95;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.15);
+            --success: #22c55e;
+            --success-glow: rgba(34, 197, 94, 0.15);
+            --warning: #f59e0b;
+            --warning-glow: rgba(245, 158, 11, 0.15);
+            --border: #2a2a30;
+            --border-light: #3a3a42;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title i { color: var(--warning); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .btn:hover { background: var(--bg-hover); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--accent-hover) 0%, #1d4ed8 100%);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--danger-glow);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover { background: var(--danger); color: white; }
+
+        .btn-success {
+            background: var(--success-glow);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .btn-success:hover { background: var(--success); color: white; }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Login Page */
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+        }
+
+        .login-page h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .login-page h1 i { color: var(--warning); }
+
+        .login-page .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .login-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box .form-group { margin-bottom: 20px; }
+
+        .login-box label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .login-box input:focus { outline: none; border-color: var(--accent); }
+
+        .login-box .btn-primary { width: 100%; justify-content: center; }
+
+        /* Admin Panel */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 { font-size: 16px; font-weight: 600; }
+
+        .card-body { padding: 20px; }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .network-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .network-table th,
+        .network-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .network-table th {
+            background: var(--bg-tertiary);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .network-table tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .network-table .id {
+            font-family: monospace;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .network-table .name {
+            font-weight: 600;
+        }
+
+        .network-table .date {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .network-table .actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .empty-state {
+            padding: 60px 40px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal .form-group { margin-bottom: 16px; }
+
+        .modal .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .modal input:focus { outline: none; border-color: var(--accent); }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .back-link:hover { color: var(--text-primary); }
+
+        @media (max-width: 768px) {
+            .network-table th:nth-child(3),
+            .network-table td:nth-child(3) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Panel -->
+    <div class="panel active" id="login-panel">
+        <div class="login-page">
+            <h1><i class="fas fa-shield-alt"></i> Netzwerk-Verwaltung</h1>
+            <p class="subtitle">Globales Admin-Panel fuer den Straftatenrechner</p>
+
+            <div class="login-box">
+                <div class="form-group">
+                    <label>Admin-Passwort</label>
+                    <input type="password" id="adminPassword" placeholder="Passwort eingeben">
+                </div>
+                <button class="btn btn-primary" onclick="login()">
+                    <i class="fas fa-unlock"></i> Anmelden
+                </button>
+            </div>
+
+            <a href="/" class="back-link" style="margin-top: 24px;">
+                <i class="fas fa-arrow-left"></i> Zurueck zur Startseite
+            </a>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="panel" id="admin-panel">
+        <div class="container">
+            <a href="/" class="back-link">
+                <i class="fas fa-arrow-left"></i> Zurueck zur Startseite
+            </a>
+
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-shield-alt"></i>
+                    Netzwerk-Verwaltung
+                </h1>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-primary" onclick="showCreateModal()">
+                        <i class="fas fa-plus"></i> Neues Netzwerk
+                    </button>
+                    <button class="btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Abmelden
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="value" id="statNetworkCount">0</div>
+                    <div class="label">Netzwerke</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-network-wired" style="color: var(--accent); margin-right: 8px;"></i>Alle Netzwerke</h3>
+                </div>
+                <div class="card-body" id="networkTableContainer">
+                    <div class="empty-state">
+                        <i class="fas fa-network-wired"></i>
+                        <p>Lade Netzwerke...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Network Modal -->
+    <div class="modal-overlay" id="createModal">
+        <div class="modal">
+            <h3><i class="fas fa-plus" style="color: var(--accent);"></i>Neues Netzwerk erstellen</h3>
+            <div class="form-group">
+                <label>Netzwerk-Name</label>
+                <input type="text" id="newNetworkName" placeholder="z.B. LSPD Server 1">
+            </div>
+            <div class="form-group">
+                <label>Zugangs-Passwort</label>
+                <input type="password" id="newNetworkPassword" placeholder="Min. 4 Zeichen">
+                <p class="info-text">Dieses Passwort benoetigen Mitglieder zum Beitreten</p>
+            </div>
+            <div class="form-group">
+                <label>Admin-Passwort</label>
+                <input type="password" id="newNetworkAdminPassword" placeholder="Min. 4 Zeichen">
+                <p class="info-text">Fuer die Gesetzesverwaltung innerhalb des Netzwerks</p>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeModal('createModal')">Abbrechen</button>
+                <button class="btn btn-primary" onclick="createNetwork()">
+                    <i class="fas fa-plus"></i> Erstellen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Network Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <h3><i class="fas fa-edit" style="color: var(--accent);"></i>Netzwerk bearbeiten</h3>
+            <input type="hidden" id="editNetworkId">
+            <div class="form-group">
+                <label>Netzwerk-Name</label>
+                <input type="text" id="editNetworkName" placeholder="Netzwerk-Name">
+            </div>
+            <div class="form-group">
+                <label>Neues Zugangs-Passwort (leer lassen um beizubehalten)</label>
+                <input type="password" id="editNetworkPassword" placeholder="Neues Zugangs-Passwort">
+            </div>
+            <div class="form-group">
+                <label>Neues Admin-Passwort (leer lassen um beizubehalten)</label>
+                <input type="password" id="editNetworkAdminPassword" placeholder="Neues Admin-Passwort">
+            </div>
+            <div class="form-group">
+                <label>Aktuelles Admin-Passwort des Netzwerks (zur Bestaetigung)</label>
+                <input type="password" id="editCurrentAdminPassword" placeholder="Aktuelles Admin-Passwort">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeModal('editModal')">Abbrechen</button>
+                <button class="btn btn-primary" onclick="updateNetwork()">
+                    <i class="fas fa-save"></i> Speichern
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Network Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <h3><i class="fas fa-trash" style="color: var(--danger);"></i>Netzwerk loeschen</h3>
+            <input type="hidden" id="deleteNetworkId">
+            <p style="margin-bottom: 16px;">
+                Moechten Sie das Netzwerk <strong id="deleteNetworkName" style="color: var(--danger);"></strong> wirklich loeschen?
+            </p>
+            <p style="color: var(--danger); font-size: 13px; margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle"></i> Diese Aktion kann nicht rueckgaengig gemacht werden. Alle Gesetze und Sessions des Netzwerks werden geloescht!
+            </p>
+            <div class="form-group">
+                <label>Admin-Passwort des Netzwerks (zur Bestaetigung)</label>
+                <input type="password" id="deleteAdminPassword" placeholder="Admin-Passwort eingeben">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeModal('deleteModal')">Abbrechen</button>
+                <button class="btn btn-danger" onclick="deleteNetwork()">
+                    <i class="fas fa-trash"></i> Endgueltig loeschen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+        const GLOBAL_ADMIN_PASSWORD = 'admin123';
+        let networks = [];
+
+        // API Helper
+        async function api(endpoint, options = {}) {
+            const res = await fetch(API_URL + endpoint, {
+                ...options,
+                headers: { 'Content-Type': 'application/json', ...options.headers }
+            });
+            if (!res.ok) {
+                const error = await res.json().catch(() => ({ error: 'Unbekannter Fehler' }));
+                throw new Error(error.error || 'Request fehlgeschlagen');
+            }
+            return res.json();
+        }
+
+        // Login
+        function login() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === GLOBAL_ADMIN_PASSWORD) {
+                sessionStorage.setItem('networkAdminAuth', 'true');
+                showAdminPanel();
+            } else {
+                alert('Falsches Passwort!');
+                document.getElementById('adminPassword').value = '';
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('networkAdminAuth');
+            document.getElementById('login-panel').classList.add('active');
+            document.getElementById('admin-panel').classList.remove('active');
+        }
+
+        function showAdminPanel() {
+            document.getElementById('login-panel').classList.remove('active');
+            document.getElementById('admin-panel').classList.add('active');
+            loadNetworks();
+        }
+
+        // Modal functions
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // Load networks
+        async function loadNetworks() {
+            try {
+                networks = await api('/api/networks');
+                document.getElementById('statNetworkCount').textContent = networks.length;
+                renderNetworkTable();
+            } catch (err) {
+                console.error('Failed to load networks:', err);
+            }
+        }
+
+        function renderNetworkTable() {
+            const container = document.getElementById('networkTableContainer');
+
+            if (networks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-network-wired"></i>
+                        <p>Noch keine Netzwerke vorhanden</p>
+                        <p style="font-size: 12px;">Erstellen Sie ein neues Netzwerk um zu starten</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="network-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Erstellt</th>
+                            <th style="text-align: right;">Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${networks.map(n => `
+                            <tr>
+                                <td class="id">${n.id}</td>
+                                <td class="name">${n.name}</td>
+                                <td class="date">${new Date(n.created_at).toLocaleDateString('de-DE')}</td>
+                                <td class="actions">
+                                    <button class="btn btn-sm" onclick="showEditModal('${n.id}', '${n.name.replace(/'/g, "\\'")}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="showDeleteModal('${n.id}', '${n.name.replace(/'/g, "\\'")}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Create Network
+        function showCreateModal() {
+            document.getElementById('newNetworkName').value = '';
+            document.getElementById('newNetworkPassword').value = '';
+            document.getElementById('newNetworkAdminPassword').value = '';
+            openModal('createModal');
+            setTimeout(() => document.getElementById('newNetworkName').focus(), 100);
+        }
+
+        async function createNetwork() {
+            const name = document.getElementById('newNetworkName').value.trim();
+            const password = document.getElementById('newNetworkPassword').value;
+            const adminPassword = document.getElementById('newNetworkAdminPassword').value;
+
+            if (!name || !password || !adminPassword) {
+                alert('Bitte alle Felder ausfuellen');
+                return;
+            }
+
+            if (password.length < 4) {
+                alert('Zugangs-Passwort muss mindestens 4 Zeichen haben');
+                return;
+            }
+
+            if (adminPassword.length < 4) {
+                alert('Admin-Passwort muss mindestens 4 Zeichen haben');
+                return;
+            }
+
+            try {
+                await api('/api/networks', {
+                    method: 'POST',
+                    body: JSON.stringify({ name, password, adminPassword })
+                });
+
+                closeModal('createModal');
+                loadNetworks();
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+            }
+        }
+
+        // Edit Network
+        function showEditModal(id, name) {
+            document.getElementById('editNetworkId').value = id;
+            document.getElementById('editNetworkName').value = name;
+            document.getElementById('editNetworkPassword').value = '';
+            document.getElementById('editNetworkAdminPassword').value = '';
+            document.getElementById('editCurrentAdminPassword').value = '';
+            openModal('editModal');
+        }
+
+        async function updateNetwork() {
+            const id = document.getElementById('editNetworkId').value;
+            const name = document.getElementById('editNetworkName').value.trim();
+            const password = document.getElementById('editNetworkPassword').value;
+            const adminPassword = document.getElementById('editNetworkAdminPassword').value;
+            const currentAdminPassword = document.getElementById('editCurrentAdminPassword').value;
+
+            if (!name) {
+                alert('Bitte einen Namen eingeben');
+                return;
+            }
+
+            if (!currentAdminPassword) {
+                alert('Bitte das aktuelle Admin-Passwort des Netzwerks eingeben');
+                return;
+            }
+
+            const body = { name, currentAdminPassword };
+            if (password) body.password = password;
+            if (adminPassword) body.adminPassword = adminPassword;
+
+            try {
+                await api(`/api/networks/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(body)
+                });
+
+                closeModal('editModal');
+                loadNetworks();
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+            }
+        }
+
+        // Delete Network
+        function showDeleteModal(id, name) {
+            document.getElementById('deleteNetworkId').value = id;
+            document.getElementById('deleteNetworkName').textContent = name;
+            document.getElementById('deleteAdminPassword').value = '';
+            openModal('deleteModal');
+        }
+
+        async function deleteNetwork() {
+            const id = document.getElementById('deleteNetworkId').value;
+            const adminPassword = document.getElementById('deleteAdminPassword').value;
+
+            if (!adminPassword) {
+                alert('Bitte das Admin-Passwort eingeben');
+                return;
+            }
+
+            try {
+                await api(`/api/networks/${id}`, {
+                    method: 'DELETE',
+                    body: JSON.stringify({ adminPassword })
+                });
+
+                closeModal('deleteModal');
+                loadNetworks();
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('networkAdminAuth') === 'true') {
+                showAdminPanel();
+            }
+
+            document.getElementById('adminPassword').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
+        });
+
+        // Close modals on escape or overlay click
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+            }
+        });
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>
