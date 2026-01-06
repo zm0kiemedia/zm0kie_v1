@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Locked - LawNet</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030000;
+            --danger: #ef4444;
+            --danger-dim: rgba(239, 68, 68, 0.1);
+            --danger-glow: rgba(239, 68, 68, 0.5);
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --glass-bg: rgba(20, 10, 10, 0.8);
+            --glass-border: rgba(239, 68, 68, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Scanline Overlay */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0),
+                    rgba(255, 255, 255, 0) 50%,
+                    rgba(0, 0, 0, 0.2) 50%,
+                    rgba(0, 0, 0, 0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.3;
+        }
+
+        /* Red Alert Pulse */
+        .alert-pulse {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 60%, rgba(239, 68, 68, 0.15));
+            animation: pulse 2s infinite ease-in-out;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .container {
+            z-index: 10;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .error-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 48px 32px;
+            box-shadow: 0 0 50px rgba(239, 68, 68, 0.15);
+            position: relative;
+        }
+
+        .error-card::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            border-radius: 20px;
+            z-index: -1;
+            background: linear-gradient(45deg, transparent, var(--danger), transparent);
+            opacity: 0.3;
+        }
+
+        .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            background: var(--danger-dim);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 32px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 0 30px var(--danger-dim);
+            animation: bounce 2s infinite;
+        }
+
+        .icon-wrapper i {
+            font-size: 32px;
+            color: var(--danger);
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--danger);
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 24px;
+            box-shadow: 0 0 15px var(--danger-glow);
+        }
+
+        h1 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            font-size: 15px;
+            margin-bottom: 32px;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: white;
+            color: black;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .message-box {
+            background: #000;
+            border: 1px solid var(--glass-border);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .message-box code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--danger);
+            font-size: 12px;
+        }
+
+        .footer {
+            margin-top: 32px;
+            font-family: 'JetBrains Mono', monospace;
+            opacity: 0.4;
+            transition: opacity 0.3s;
+        }
+
+        .error-card:hover .card-header-brand {
+            opacity: 0.8;
+        }
+
+        .card-header-brand img {
+            width: 24px;
+            filter: grayscale(100%);
+        }
+
+        .card-header-brand span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="scanlines"></div>
+    <div class="alert-pulse"></div>
+
+    <div class="container">
+        <div class="error-card">
+
+            <div class="status-badge">Access Denied</div>
+
+            <div class="icon-wrapper">
+                <i class="fas fa-lock"></i>
+            </div>
+
+            <h1>Lizenz Abgelaufen</h1>
+
+            <p>Die Lizenz für dieses Modul ist nicht mehr gültig. Der Zugriff wurde vom Nexus-Sicherheitssystem
+                gesperrt.</p>
+
+            <div class="message-box">
+                <code id="licenseKey">KEY: <span id="keyDisplay">LOADING...</span></code>
+            </div>
+
+            <div class="actions">
+                <a href="https://discord.gg/kVcN4H9ZNC" target="_blank" class="btn btn-secondary">
+                    <i class="fab fa-discord"></i>
+                    Support kontaktieren
+                </a>
+                <button onclick="checkLicense()" class="btn btn-primary">
+                    <i class="fas fa-sync"></i>
+                    Status erneut prüfen
+                </button>
+            </div>
+
+            <div class="footer" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <img src="/assets/lawnet_badge.png" alt="LawNet"
+                    style="height: 14px; opacity: 0.7; filter: grayscale(100%);">
+                <span>LAWNET // LICENSE_EXPIRY_0x99</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch license key to display for easier support
+        async function fetchInfo() {
+            try {
+                // We don't have a direct endpoint for Key only, but let's try assuming standard API
+                // Or just show "UNKNOWN" if we can't get it.
+                // Actually, the server logs it. 
+                // We'll just put a placeholder or remove the key display if we can't easily get it.
+                // For now, let's just checking status.
+                const response = await fetch('/api/license-status');
+                const data = await response.json();
+                if (data.valid) {
+                    window.location.href = '/';
+                } else {
+                    document.getElementById('keyDisplay').innerText = "INVALID";
+                }
+            } catch (e) {
+                document.getElementById('keyDisplay').innerText = "CONNECTION_ERR";
+            }
+        }
+
+        async function checkLicense() {
+            const btn = document.querySelector('.btn-primary');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Prüfe...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/license-status');
+                const data = await response.json();
+
+                if (data.valid) {
+                    btn.innerHTML = '<i class="fas fa-check"></i> Aktiviert!';
+                    btn.style.background = '#22c55e';
+                    btn.style.color = 'white';
+                    setTimeout(() => window.location.href = '/', 1000);
+                } else {
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="fas fa-times"></i> Weiterhin inaktiv';
+                        btn.style.background = '#ef4444';
+                        btn.style.color = 'white';
+                        setTimeout(() => {
+                            btn.innerHTML = '<i class="fas fa-sync"></i> Status erneut prüfen';
+                            btn.style.background = 'white';
+                            btn.style.color = 'black';
+                            btn.disabled = false;
+                        }, 2000);
+                    }, 500);
+                }
+            } catch (e) {
+                alert("Verbindung zum Server fehlgeschlagen");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sync"></i> Status erneut prüfen';
+            }
+        }
+
+        // Auto check on load
+        fetchInfo();
+
+        // Auto-retry every 30s
+        setInterval(checkLicense, 30000);
+    </script>
+</body>
+
+</html>

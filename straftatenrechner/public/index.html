@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Straftatenrechner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="/assets/lawnet_badge.png">
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #141416;
+            --bg-tertiary: #1e1e22;
+            --bg-hover: #28282e;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b95;
+            --accent: #fe8900;
+            --accent-hover: #e67a00;
+            --accent-glow: rgba(254, 137, 0, 0.15);
+            --accent-secondary: #17a2b8;
+            --accent-secondary-hover: #1cb3cc;
+            --accent-secondary-glow: rgba(23, 162, 184, 0.15);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.15);
+            --success: #22c55e;
+            --success-glow: rgba(34, 197, 94, 0.15);
+            --warning: #f59e0b;
+            --warning-glow: rgba(245, 158, 11, 0.15);
+            --primary: #fe8900;
+            --border: #2a2a30;
+            --border-light: #3a3a42;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+            flex: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            /* Crucial for nested flex scrolling */
+        }
+
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 24px;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .footer p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .footer span {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .selected-category-header {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin: 16px 0 8px 0;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .selected-category-header::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .selected-category-header:first-child {
+            margin-top: 0;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(254, 137, 0, 0.03) 50%, rgba(23, 162, 184, 0.03) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(254, 137, 0, 0.06);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title i {
+            color: var(--accent);
+            background: var(--bg-tertiary);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .page-title img {
+            height: 32px !important;
+            width: auto !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+            margin-right: 12px !important;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--bg-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 10px rgba(254, 137, 0, 0.3);
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
+            box-shadow: 0 6px 15px rgba(254, 137, 0, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: var(--danger-glow);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-glow);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .btn-success:hover {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Calculator Page */
+        .calculator-layout {
+            display: flex;
+            gap: 32px;
+            flex: 1;
+            min-height: 0;
+            /* Crucial for nested flex scrolling */
+        }
+
+        .calculator-sidebar {
+            width: 420px;
+            flex-shrink: 0;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .calculator-sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-tertiary);
+        }
+
+        .calculator-sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .calculator-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-width: 0;
+            /* Fix flex overflow */
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .calc-category {
+            margin-bottom: 16px;
+        }
+
+        .calc-category-header {
+            font-weight: 600;
+            color: var(--accent-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-shadow: 0 0 10px var(--accent-secondary-glow);
+        }
+
+        .calc-offense-item {
+            padding: 12px;
+            background: var(--bg-primary);
+            /* Inverted for contrast */
+            border: 1px solid transparent;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calc-offense-item:hover {
+            background: var(--bg-hover);
+            border-color: var(--border);
+            transform: translateX(2px);
+        }
+
+        .calc-offense-item.selected {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--accent);
+        }
+
+        .calc-offense-item.selected::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--accent);
+        }
+
+        .calc-offense-item .name {
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .calc-offense-item .details {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .calc-offense-item .details span {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid transparent;
+            background-clip: padding-box;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(254, 137, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(254, 137, 0, 0.3), 0 0 20px rgba(254, 137, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(254, 137, 0, 0.05) 0%, rgba(23, 162, 184, 0.05) 100%);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-body {
+            padding: 24px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #calcSelectedList {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 24px;
+            padding-right: 8px;
+            /* Space for scrollbar */
+        }
+
+        .selected-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            /* Card-like for selected */
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .selected-item:hover {
+            border-color: var(--border-light);
+            background: var(--bg-hover);
+        }
+
+        .selected-item .info {
+            flex: 1;
+        }
+
+        .selected-item .btn-danger {
+            padding: 8px;
+            border-radius: 6px;
+            opacity: 0.7;
+        }
+
+        .selected-item .btn-danger:hover {
+            opacity: 1;
+        }
+
+        .modifiers {
+            margin-top: auto;
+            /* Push to bottom */
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .calc-modifier {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+            background: var(--bg-primary);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calc-modifier:hover {
+            background: var(--bg-hover);
+            transform: translateY(-2px);
+        }
+
+        .calc-modifier.active {
+            background: rgba(var(--modifier-color), 0.1);
+            border-color: rgb(var(--modifier-color));
+        }
+
+        .calc-modifier .label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .calc-modifier .value {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .totals-section {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .totals-section h4 {
+            margin-bottom: 16px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .totals-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .total-item {
+            text-align: center;
+            padding: 16px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .total-item .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .total-item .value {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            /* Monospace for numbers */
+        }
+
+        .total-item .value.jail {
+            color: var(--danger);
+        }
+
+        .total-item .value.fine {
+            color: var(--success);
+        }
+
+        .total-item .value.points {
+            color: var(--warning);
+        }
+
+        .modified-totals {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(245, 158, 11, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .modified-totals .modifiers-text {
+            font-size: 12px;
+            color: var(--warning);
+            margin-bottom: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .modified-totals .modifiers-text::before {
+            content: '\f0d0';
+            /* FontAwesome magic */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+        }
+
+        .limit-warning {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            text-align: center;
+            color: var(--danger);
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% {
+                border-color: rgba(239, 68, 68, 0.3);
+            }
+
+            50% {
+                border-color: rgba(239, 68, 68, 0.6);
+            }
+
+            100% {
+                border-color: rgba(239, 68, 68, 0.3);
+            }
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.2;
+            color: var(--text-primary);
+        }
+
+        .session-info {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-primary);
+            padding: 6px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .status {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .session-code-badge {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-tertiary);
+            color: var(--accent);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .session-code-badge:hover {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-1px);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 32px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+            animation: modal-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modal-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal .form-group {
+            margin-bottom: 24px;
+        }
+
+        .modal .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .modal input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 32px;
+        }
+
+        /* Custom Scrollbar for the whole page/containers */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-light);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Specific scrollbar for sidebar list to prevent white bar */
+        #calcOffensesList::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #calcOffensesList::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #calcOffensesList::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        #calcOffensesList::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        @media (max-width: 1200px) {
+            .calculator-layout {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .calculator-sidebar {
+                width: 100%;
+                overflow: visible;
+                height: auto;
+            }
+
+            #calcOffensesList {
+                max-height: 400px;
+            }
+        }
+
+        /* User Info styling */
+        #userInfo {
+            background: var(--bg-primary);
+            padding: 8px 16px !important;
+            border-radius: 8px;
+            border: 1px solid var(--border) !important;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+
+        .session-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Calculator Page -->
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">
+                <img src="/assets/lawnet_badge.png" alt="LAWNET"
+                    style="height: 32px; margin-right: 12px; vertical-align: middle;">
+                Straftatenrechner
+            </h1>
+            <div class="header-actions">
+                <div id="userInfo"
+                    style="display: flex; align-items: center; gap: 12px; margin-right: 8px; border-right: 1px solid var(--border); padding-right: 16px;">
+                    <i class="fas fa-user-circle" style="color: var(--accent);"></i>
+                    <span id="userName" style="font-weight: 500; color: var(--text-primary);"></span>
+                    <a href="/auth/logout" class="btn"
+                        style="padding: 6px 12px; font-size: 13px; background: rgba(255,50,50,0.1); color: #ff4444; border: 1px solid rgba(255,50,50,0.2);">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+                <div class="session-controls">
+                    <div class="session-info" id="calcSessionInfo">
+                        <span class="status" id="calcSessionStatus"></span>
+                        <div class="session-code-badge" id="calcSessionCodeContainer" onclick="copySessionCode()"
+                            title="Klicken zum Kopieren">
+                            <span id="calcSessionCode"></span>
+                            <i class="fas fa-copy"></i>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="btnCreateSession" onclick="createCalcSession()">
+                        <i class="fas fa-plus"></i> Session erstellen
+                    </button>
+                    <button class="btn" id="btnJoinSession" onclick="showJoinSessionModal()">
+                        <i class="fas fa-sign-in-alt"></i> Session beitreten
+                    </button>
+                    <button class="btn btn-danger" id="btnLeaveSession" onclick="leaveCalcSession()"
+                        style="display: none;">
+                        <i class="fas fa-sign-out-alt"></i> Verlassen
+                    </button>
+                </div>
+                <button class="btn btn-danger" onclick="clearCalculator()">
+                    <i class="fas fa-trash"></i> Alle entfernen
+                </button>
+                <a href="/admin.html" class="btn">
+                    <i class="fas fa-cog"></i> Admin
+                </a>
+            </div>
+        </div>
+
+        <div class="calculator-layout">
+            <div class="calculator-sidebar">
+                <div class="calculator-sidebar-header">
+                    <div class="search-container" style="margin-bottom: 0;">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" id="calcSearch" placeholder="Straftat suchen...">
+                    </div>
+                </div>
+                <div id="calcOffensesList" class="calculator-sidebar-content"></div>
+            </div>
+
+            <div class="calculator-main">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Ausgewählte Straftaten</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="calcSelectedList"></div>
+
+                        <div class="modifiers">
+                            <button class="calc-modifier" id="btnCalcEigenJudikative"
+                                onclick="toggleCalcModifier('eigenJudikative')"
+                                style="border-color: var(--accent-secondary); color: var(--accent-secondary);">
+                                <div class="label">Eigen Judikative</div>
+                                <div class="value">-10% Haft</div>
+                            </button>
+                            <button class="calc-modifier" id="btnCalcKrimiStatus"
+                                onclick="toggleCalcModifier('krimiStatus')"
+                                style="border-color: #fd7e14; color: #fd7e14;">
+                                <div class="label">Krimi Status</div>
+                                <div class="value">x3 Geld</div>
+                            </button>
+                            <button class="calc-modifier" id="btnCalcTerrorStatus"
+                                onclick="toggleCalcModifier('terrorStatus')"
+                                style="border-color: #dc3545; color: #dc3545;">
+                                <div class="label">Terror Status</div>
+                                <div class="value">x5 Geld</div>
+                            </button>
+                        </div>
+
+                        <div class="totals-section">
+                            <h4>Gesamtstrafe</h4>
+                            <div class="totals-grid">
+                                <div class="total-item">
+                                    <div class="label">Hafteinheiten</div>
+                                    <div class="value jail" id="calcTotalJail">0</div>
+                                </div>
+                                <div class="total-item">
+                                    <div class="label">Geldstrafe</div>
+                                    <div class="value fine" id="calcTotalFine">$0</div>
+                                </div>
+                                <div class="total-item">
+                                    <div class="label">StVO-Punkte</div>
+                                    <div class="value points" id="calcTotalPoints">0</div>
+                                </div>
+                            </div>
+
+                            <div class="modified-totals" id="calcModifiedTotals">
+                                <div class="modifiers-text" id="calcModifiersText">Aktive Modifikatoren:</div>
+                                <div class="totals-grid">
+                                    <div class="total-item">
+                                        <div class="label">Haft (mod.)</div>
+                                        <div class="value jail" id="calcTotalJailMod">0</div>
+                                    </div>
+                                    <div class="total-item">
+                                        <div class="label">Geld (mod.)</div>
+                                        <div class="value fine" id="calcTotalFineMod">$0</div>
+                                    </div>
+                                    <div class="total-item">
+                                        <div class="label">Punkte (mod.)</div>
+                                        <div class="value points" id="calcTotalPointsMod">0</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="limit-warning" id="calcLimitWarning">
+                                ⚠️ Über 50.000$ und/oder 90 Minuten! NUR mit DOJ-Erlaubnis (oder Krimi/Terrorstatus)!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>
+            <img src="/assets/lawnet_badge_gray.png" alt="LAWNET"
+                style="height: 24px; margin-right: 8px; vertical-align: middle; opacity: 0.6;">
+            &copy; 2026 <span>LAWNET</span> System. Alle Rechte vorbehalten.
+            <br>
+            <span style="font-size: 12px; color: var(--text-secondary); opacity: 0.7;">Straftatenrechner v2.0 &bull;
+                Designed for Leitstelle-CC</span>
+        </p>
+    </footer>
+
+    <!-- Join Session Modal -->
+    <div class="modal-overlay" id="calcSessionModal">
+        <div class="modal">
+            <h3>Session beitreten</h3>
+            <div class="form-group">
+                <label>Session-Code</label>
+                <input type="text" id="joinSessionCode" maxlength="4" placeholder="0000"
+                    style="text-align: center; letter-spacing: 8px; font-size: 24px;">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeModal('calcSessionModal')">Abbrechen</button>
+                <button class="btn btn-primary" onclick="joinCalcSession()">Beitreten</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clear Confirm Modal -->
+    <div class="modal-overlay" id="calcClearModal">
+        <div class="modal">
+            <h3>Alles löschen?</h3>
+            <div class="form-group">
+                <p>Möchtest du wirklich alle ausgewählten Straftaten entfernen?</p>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeModal('calcClearModal')">Abbrechen</button>
+                <button class="btn btn-danger" onclick="confirmClearCalculator()">Löschen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+
+        // Current state
+        let calcSelectedOffenses = [];
+        let calcModifiers = { eigenJudikative: false, krimiStatus: false, terrorStatus: false };
+        let allCalcOffenses = [];
+        let calcSessionCode = null;
+        let calcWebSocket = null;
+        let calcSyncEnabled = false;
+        let calcLimitFine = 50000;
+        let calcLimitJail = 90;
+
+        // New Dynamic Settings
+        let taxJudiciary = 20;
+        let multiplierCrime = 1.5;
+        let multiplierTerror = 2.0;
+
+        // API Helper
+        async function api(endpoint, options = {}) {
+            const res = await fetch(API_URL + endpoint, {
+                ...options,
+                headers: { 'Content-Type': 'application/json', ...options.headers }
+            });
+            if (!res.ok) {
+                const error = await res.json().catch(() => ({ error: 'Unbekannter Fehler' }));
+                throw new Error(error.error || 'Request fehlgeschlagen');
+            }
+            return res.json();
+        }
+
+        // Modal functions
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        // ==================== CALCULATOR FUNCTIONS ====================
+
+        function connectCalcWebSocket(code) {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${wsProtocol}//${window.location.host}`;
+
+            calcWebSocket = new WebSocket(wsUrl);
+
+            calcWebSocket.onopen = () => {
+                calcWebSocket.send(JSON.stringify({ type: 'join', code: code }));
+                updateCalcSessionStatus('Verbunden', 'var(--success)');
+            };
+
+            calcWebSocket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'sync') {
+                        calcSyncEnabled = false;
+                        calcSelectedOffenses = data.selected_offenses || [];
+                        calcModifiers = data.modifiers || calcModifiers;
+                        updateCalcSelectedList();
+                        renderCalcOffenses(allCalcOffenses); // Sync visual selection state in sidebar
+                        updateCalcModifierButtons();
+                        updateCalcTotals();
+                        calcSyncEnabled = true;
+                    }
+                } catch (err) {
+                    console.error('WebSocket message error:', err);
+                }
+            };
+
+            calcWebSocket.onerror = () => updateCalcSessionStatus('Verbindung Fehler', 'var(--danger)');
+            calcWebSocket.onclose = () => updateCalcSessionStatus('Getrennt', 'var(--text-secondary)');
+        }
+
+        async function createCalcSession() {
+            try {
+                const result = await api('/api/calc-sessions', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        selected_offenses: calcSelectedOffenses,
+                        modifiers: calcModifiers,
+                        notes: document.getElementById('calcNotes') ? document.getElementById('calcNotes').value : ''
+                    })
+                });
+                calcSessionCode = result.code;
+                showCalcSessionInfo(result.code);
+                connectCalcWebSocket(result.code);
+                calcSyncEnabled = true;
+                saveStateToLocal();
+            } catch (err) {
+                alert('Fehler beim Erstellen der Session: ' + err.message);
+            }
+        }
+
+        function showJoinSessionModal() {
+            document.getElementById('joinSessionCode').value = '';
+            openModal('calcSessionModal');
+            setTimeout(() => document.getElementById('joinSessionCode').focus(), 100);
+        }
+
+        async function joinCalcSession() {
+            const code = document.getElementById('joinSessionCode').value;
+
+            if (!code || code.length !== 4) {
+                alert('Bitte 4-stelligen Code eingeben');
+                return;
+            }
+
+            try {
+                const session = await api(`/api/calc-sessions/${code}`);
+                closeModal('calcSessionModal');
+                calcSessionCode = code;
+                calcSelectedOffenses = session.selected_offenses || [];
+                calcModifiers = session.modifiers || calcModifiers;
+
+                showCalcSessionInfo(code);
+                updateCalcSelectedList();
+                updateCalcModifierButtons();
+                updateCalcTotals();
+                updateCalcTotals();
+                connectCalcWebSocket(code);
+                calcSyncEnabled = true;
+                saveStateToLocal();
+            } catch (err) {
+                alert('Fehler: ' + err.message);
+            }
+        }
+
+        function leaveCalcSession() {
+            if (!calcSessionCode) return;
+
+            if (calcWebSocket) {
+                calcWebSocket.close();
+                calcWebSocket = null;
+            }
+
+            calcSessionCode = null;
+            calcSyncEnabled = false;
+            document.getElementById('calcSessionInfo').style.display = 'none';
+            document.getElementById('btnCreateSession').style.display = 'inline-flex';
+            document.getElementById('btnJoinSession').style.display = 'inline-flex';
+            document.getElementById('btnLeaveSession').style.display = 'none';
+            saveStateToLocal();
+        }
+
+        function showCalcSessionInfo(code) {
+            document.getElementById('calcSessionInfo').style.display = 'flex';
+            document.getElementById('calcSessionCode').innerText = code;
+            document.getElementById('btnCreateSession').style.display = 'none';
+            document.getElementById('btnJoinSession').style.display = 'none';
+            document.getElementById('btnLeaveSession').style.display = 'inline-flex';
+        }
+
+        function copySessionCode() {
+            const code = document.getElementById('calcSessionCode').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const badge = document.getElementById('calcSessionCodeContainer');
+                const originalHtml = badge.innerHTML;
+
+                badge.innerHTML = `<span style="color: var(--success)">Kopiert!</span> <i class="fas fa-check" style="color: var(--success)"></i>`;
+                badge.style.borderColor = 'var(--success)';
+                badge.style.background = 'rgba(16, 185, 129, 0.1)';
+
+                setTimeout(() => {
+                    badge.innerHTML = originalHtml;
+                    badge.style.borderColor = '';
+                    badge.style.background = '';
+                }, 2000);
+            });
+        }
+
+        function updateCalcSessionStatus(status, color) {
+            const statusEl = document.getElementById('calcSessionStatus');
+            statusEl.textContent = `• ${status}`;
+            statusEl.style.color = color;
+        }
+
+        async function syncCalcSession() {
+            if (!calcSyncEnabled || !calcSessionCode) return;
+
+            try {
+                await api(`/api/calc-sessions/${calcSessionCode}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        selected_offenses: calcSelectedOffenses,
+                        modifiers: calcModifiers,
+                        notes: ''
+                    })
+                });
+
+                if (calcWebSocket && calcWebSocket.readyState === 1) {
+                    calcWebSocket.send(JSON.stringify({
+                        type: 'update',
+                        selected_offenses: calcSelectedOffenses,
+                        modifiers: calcModifiers,
+                        notes: ''
+                    }));
+                }
+            } catch (err) {
+                console.error('Sync error:', err);
+            }
+        }
+
+        async function loadCalcOffenses() {
+            try {
+                allCalcOffenses = await api('/api/laws');
+                renderCalcOffenses(allCalcOffenses);
+            } catch (err) {
+                console.error('Failed to load offenses:', err);
+            }
+        }
+
+        function renderCalcOffenses(offenses) {
+            const container = document.getElementById('calcOffensesList');
+            const byCategory = {};
+
+            offenses.forEach(o => {
+                if (!byCategory[o.category]) byCategory[o.category] = [];
+                byCategory[o.category].push(o);
+            });
+
+            container.innerHTML = Object.keys(byCategory).sort().map(cat => `
+                <div class="calc-category">
+                    <div class="calc-category-header">${cat}</div>
+                    ${byCategory[cat].map(o => {
+                const selected = calcSelectedOffenses.some(s => s.id === o.id);
+                return `
+                            <div class="calc-offense-item ${selected ? 'selected' : ''}" onclick="toggleCalcOffense(${o.id})">
+                                <div class="name">${o.paragraph} - ${o.title}</div>
+                                <div class="details">
+                                    Haft: ${o.jail_min}-${o.jail_max} Min. | Geld: $${o.fine_min.toLocaleString()}-$${o.fine_max.toLocaleString()}
+                                    ${o.points > 0 ? ` | ${o.points} Punkte` : ''}
+                                    ${o.is_felony ? ' | <strong>Verbrechen</strong>' : ''}
+                                </div>
+                            </div>
+                        `;
+            }).join('')}
+                </div>
+            `).join('');
+        }
+
+        function toggleCalcOffense(id) {
+            const offense = allCalcOffenses.find(o => o.id === id);
+            if (!offense) return;
+
+            const idx = calcSelectedOffenses.findIndex(o => o.id === id);
+            if (idx >= 0) {
+                calcSelectedOffenses.splice(idx, 1);
+            } else {
+                calcSelectedOffenses.push({
+                    id: offense.id,
+                    paragraph: offense.paragraph,
+                    title: offense.title,
+                    jail: Math.ceil((offense.jail_min + offense.jail_max) / 2),
+                    fine: Math.ceil((offense.fine_min + offense.fine_max) / 2),
+                    points: offense.points,
+                    is_felony: offense.is_felony,
+                    category: offense.category
+                });
+            }
+
+            renderCalcOffenses(allCalcOffenses);
+            updateCalcSelectedList();
+            updateCalcTotals();
+            syncCalcSession();
+            saveStateToLocal();
+        }
+
+        function updateCalcSelectedList() {
+            const container = document.getElementById('calcSelectedList');
+            if (calcSelectedOffenses.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-gavel"></i>
+                        <p>Keine Straftaten ausgewaehlt</p>
+                        <p class="hint">Waehle Straftaten aus der Liste links aus</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const byCategory = {};
+            calcSelectedOffenses.forEach(o => {
+                const cat = o.category || 'Sonstige';
+                if (!byCategory[cat]) byCategory[cat] = [];
+                byCategory[cat].push(o);
+            });
+
+            container.innerHTML = Object.keys(byCategory).sort().map(cat => `
+                <div class="selected-category-container">
+                    <div class="selected-category-header">${cat}</div>
+                    ${byCategory[cat].map(o => `
+                        <div class="selected-item">
+                            <div class="info">
+                                <div class="name">${o.paragraph} - ${o.title}</div>
+                                <div class="details">Haft: ${o.jail} Min. | Geld: $${o.fine.toLocaleString()} ${o.points > 0 ? `| ${o.points} Punkte` : ''}</div>
+                            </div>
+                            <button class="btn btn-danger" onclick="removeCalcOffense(${o.id})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+
+        function removeCalcOffense(id) {
+            calcSelectedOffenses = calcSelectedOffenses.filter(o => o.id !== id);
+            renderCalcOffenses(allCalcOffenses);
+            updateCalcSelectedList();
+            updateCalcTotals();
+            syncCalcSession();
+            saveStateToLocal();
+        }
+
+        function clearCalculator() {
+            if (calcSelectedOffenses.length === 0) return;
+            openModal('calcClearModal');
+        }
+
+        function confirmClearCalculator() {
+            calcSelectedOffenses = [];
+            renderCalcOffenses(allCalcOffenses);
+            updateCalcSelectedList();
+            updateCalcTotals();
+            syncCalcSession();
+            closeModal('calcClearModal');
+            saveStateToLocal();
+        }
+
+        function toggleCalcModifier(type) {
+            calcModifiers[type] = !calcModifiers[type];
+            updateCalcModifierButtons();
+            updateCalcTotals();
+            syncCalcSession();
+            saveStateToLocal();
+        }
+
+        function updateCalcModifierButtons() {
+            ['eigenJudikative', 'krimiStatus', 'terrorStatus'].forEach(type => {
+                const btn = document.getElementById(`btnCalc${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                if (calcModifiers[type]) {
+                    btn.style.background = btn.style.borderColor;
+                    btn.style.color = 'white';
+                } else {
+                    btn.style.background = 'transparent';
+                    btn.style.color = btn.style.borderColor;
+                }
+            });
+        }
+        function saveStateToLocal() {
+            const state = {
+                offenses: calcSelectedOffenses,
+                modifiers: calcModifiers,
+                sessionCode: calcSessionCode
+            };
+            localStorage.setItem('calcState', JSON.stringify(state));
+        }
+
+        function loadStateFromLocal() {
+            const saved = localStorage.getItem('calcState');
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved);
+                    calcSelectedOffenses = state.offenses || [];
+                    calcModifiers = state.modifiers || { eigenJudikative: false, krimiStatus: false, terrorStatus: false };
+
+                    if (state.sessionCode) {
+                        calcSessionCode = state.sessionCode;
+                        showCalcSessionInfo(state.sessionCode);
+                        connectCalcWebSocket(state.sessionCode);
+                        calcSyncEnabled = true;
+                    }
+
+                    updateCalcSelectedList();
+                    updateCalcModifierButtons();
+                    updateCalcTotals();
+                } catch (e) {
+                    console.error('Error loading saved state:', e);
+                }
+            }
+        }
+
+        function updateCalcTotals() {
+            let totalJail = calcSelectedOffenses.reduce((sum, o) => sum + o.jail, 0);
+            let totalFine = calcSelectedOffenses.reduce((sum, o) => sum + o.fine, 0);
+            let totalPoints = calcSelectedOffenses.reduce((sum, o) => sum + o.points, 0);
+
+            document.getElementById('calcTotalJail').textContent = totalJail;
+            document.getElementById('calcTotalFine').textContent = '$' + totalFine.toLocaleString();
+            document.getElementById('calcTotalPoints').textContent = totalPoints;
+
+            let modJail = totalJail;
+            let modFine = totalFine;
+
+            const activeModifiers = [];
+            if (calcModifiers.eigenJudikative) {
+                // Calculate reduction based on tax percentage (remaining % is kept)
+                const factor = (100 - taxJudiciary) / 100;
+                modJail = Math.ceil(totalJail * factor);
+                activeModifiers.push(`Eigen Judikative (-${taxJudiciary}% Haft)`);
+            }
+            if (calcModifiers.krimiStatus) {
+                modFine = totalFine * multiplierCrime;
+                activeModifiers.push(`Krimi Status (x${multiplierCrime} Geld)`);
+            }
+            if (calcModifiers.terrorStatus) {
+                modFine = totalFine * multiplierTerror;
+                activeModifiers.push(`Terror Status (x${multiplierTerror} Geld)`);
+            }
+
+            const hasModifiers = activeModifiers.length > 0;
+            document.getElementById('calcModifiedTotals').style.display = hasModifiers ? 'block' : 'none';
+
+            if (hasModifiers) {
+                document.getElementById('calcModifiersText').textContent = 'Aktive Modifikatoren: ' + activeModifiers.join(', ');
+                document.getElementById('calcTotalJailMod').textContent = modJail;
+                document.getElementById('calcTotalFineMod').textContent = '$' + modFine.toLocaleString();
+                document.getElementById('calcTotalPointsMod').textContent = totalPoints;
+            }
+
+
+            const hasWarning = modFine > calcLimitFine || modJail > calcLimitJail;
+            document.getElementById('calcLimitWarning').style.display = hasWarning ? 'block' : 'none';
+            document.getElementById('calcLimitWarning').innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                Über ${calcLimitFine.toLocaleString()}$ und/oder ${calcLimitJail} Minuten! NUR mit DOJ-Erlaubnis (oder Krimi/Terrorstatus)!
+            `;
+        }
+
+        // Search
+        document.getElementById('calcSearch').addEventListener('input', (e) => {
+            const search = e.target.value.toLowerCase();
+            if (!search) {
+                renderCalcOffenses(allCalcOffenses);
+                return;
+            }
+            const filtered = allCalcOffenses.filter(o =>
+                o.paragraph.toLowerCase().includes(search) ||
+                o.title.toLowerCase().includes(search) ||
+                o.category.toLowerCase().includes(search)
+            );
+            renderCalcOffenses(filtered);
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 0. Load Configuration
+            try {
+                const settings = await api('/api/settings');
+                if (settings.limit_fine) calcLimitFine = parseInt(settings.limit_fine);
+                if (settings.limit_jail) calcLimitJail = parseInt(settings.limit_jail);
+                if (settings.tax_judiciary) taxJudiciary = parseInt(settings.tax_judiciary);
+                if (settings.multiplier_crime) multiplierCrime = parseFloat(settings.multiplier_crime);
+                if (settings.multiplier_terror) multiplierTerror = parseFloat(settings.multiplier_terror);
+
+                // Update Button Labels dynamically
+                document.querySelector('#btnCalcEigenJudikative .value').textContent = `-${taxJudiciary}% Haft`;
+                document.querySelector('#btnCalcKrimiStatus .value').textContent = `x${multiplierCrime} Geld`;
+                document.querySelector('#btnCalcTerrorStatus .value').textContent = `x${multiplierTerror} Geld`;
+            } catch (e) {
+                console.error('Failed to load settings', e);
+            }
+
+            // 1. Load Laws
+            await loadCalcOffenses();
+
+            // 2. Load Local State (reconnect session or restore selection)
+            loadStateFromLocal();
+
+            // Load User Info
+            // Load User Info
+            try {
+                const user = await api('/api/user');
+                const userInfoContainer = document.getElementById('userInfo');
+                const adminLink = document.querySelector('a[href="/admin.html"]');
+
+                if (user && user.username) {
+                    // LOGGED IN
+                    document.getElementById('userName').textContent = user.username;
+                    userInfoContainer.style.display = 'flex';
+
+                    // Show admin button if admin
+                    if (user.is_admin) {
+                        if (adminLink) adminLink.style.display = 'inline-flex';
+                    } else {
+                        if (adminLink) adminLink.style.display = 'none';
+                    }
+                } else {
+                    // GUEST / PUBLIC
+                    userInfoContainer.style.display = 'none';
+
+                    // Modify User Info to show Login Button instead
+                    const headerControls = document.querySelector('.session-controls').parentNode;
+                    // Check if login button already exists to prevent duplicates
+                    if (!document.getElementById('btnLoginHeader')) {
+                        const loginBtn = document.createElement('a');
+                        loginBtn.id = 'btnLoginHeader';
+                        loginBtn.href = '/login';
+                        loginBtn.className = 'btn';
+                        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                        loginBtn.style.marginRight = '8px';
+                        headerControls.insertBefore(loginBtn, userInfoContainer);
+                    }
+
+                    if (adminLink) adminLink.style.display = 'none'; // Hide admin button for guests
+                }
+            } catch (err) {
+                console.error('Failed to load user info:', err);
+                // Fallback to guest mode
+                const adminLink = document.querySelector('a[href="/admin.html"]');
+                if (adminLink) adminLink.style.display = 'none';
+            }
+
+            loadCalcOffenses();
+        });
+    </script>
+    <script>
+        // Periodic License Check to force redirect on expiration
+        setInterval(async () => {
+            try {
+                const response = await fetch('/api/license-status');
+                const data = await response.json();
+                if (!data.valid) {
+                    window.location.reload();
+                }
+            } catch (e) {
+                // Ignore network errors, wait for next check
+            }
+        }, 10000); 
+    </script>
+</body>
+
+</html>

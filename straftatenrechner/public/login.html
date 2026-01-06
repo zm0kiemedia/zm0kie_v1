@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Login - LawNet</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/png" href="/assets/lawnet_badge.png">
+    <style>
+        :root {
+            --bg: #030000;
+            --primary: #fe8900;
+            --primary-dim: rgba(254, 137, 0, 0.1);
+            --primary-glow: rgba(254, 137, 0, 0.4);
+            --secondary: #17a2b8;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --glass-bg: rgba(10, 10, 12, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient Effects */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.2));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.3;
+        }
+
+        .ambient-pulse {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 30%, rgba(254, 137, 0, 0.08), transparent 60%);
+            animation: pulse 4s infinite ease-in-out;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .container {
+            z-index: 10;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .login-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px 32px;
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0.5;
+        }
+
+        /* Logo Area */
+        .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 32px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-glow {
+            position: absolute;
+            inset: 0;
+            background: var(--primary);
+            filter: blur(30px);
+            opacity: 0.2;
+            border-radius: 50%;
+            animation: bounce 3s infinite ease-in-out;
+        }
+
+        .brand-logo {
+            width: 64px;
+            height: 64px;
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 0 10px rgba(254, 137, 0, 0.5));
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.2;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.4;
+            }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--primary-dim);
+            color: var(--primary);
+            border: 1px solid rgba(254, 137, 0, 0.3);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 24px;
+            box-shadow: 0 0 15px rgba(254, 137, 0, 0.1);
+        }
+
+        h1 {
+            font-weight: 600;
+            font-size: 24px;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            margin-left: 4px;
+            font-weight: 500;
+        }
+
+        .input-box {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-dim);
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .form-input:focus+.input-icon {
+            color: var(--primary);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: var(--text-main);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: #000;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .btn:hover {
+            background: white;
+            box-shadow: 0 0 20px rgba(254, 137, 0, 0.4);
+        }
+
+        .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 24px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            opacity: 0.4;
+        }
+
+        .footer img {
+            height: 16px;
+            filter: grayscale(100%);
+        }
+
+        .footer span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scanlines"></div>
+    <div class="ambient-pulse"></div>
+
+    <div class="container">
+        <div class="login-card">
+
+            <div class="status-badge">Secure Login</div>
+
+            <div class="icon-wrapper">
+                <div class="icon-glow"></div>
+                <img src="/assets/lawnet_badge.png" class="brand-logo" alt="LawNet">
+            </div>
+
+            <h1>Straftatenrechner</h1>
+            <p>Bitte identifizieren Sie sich um fortzufahren</p>
+
+            <div class="error-msg" id="error">
+                <i class="fas fa-circle-exclamation"></i>
+                <span id="errorText">Fehler</span>
+            </div>
+
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">BENUTZERNAME</label>
+                    <div class="input-box">
+                        <input type="text" id="username" class="form-input" required autocomplete="username">
+                        <i class="fas fa-user input-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">PASSWORT</label>
+                    <div class="input-box">
+                        <input type="password" id="password" class="form-input" required autocomplete="current-password"
+                            style="padding-right: 40px;">
+                        <i class="fas fa-key input-icon"></i>
+                        <i class="fas fa-eye password-toggle" id="togglePass" onclick="togglePassword()"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">
+                    Zugang Anfordern
+                </button>
+            </form>
+
+            <div class="footer">
+                <img src="/assets/lawnet_badge.png" alt="LawNet">
+                <span>LAWNET // SYSTEM ONLINE</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('togglePass');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const errorDiv = document.getElementById('error');
+            const errorText = document.getElementById('errorText');
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifiziere...';
+            errorDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    btn.innerHTML = '<i class="fas fa-check"></i> Genehmigt';
+                    btn.style.background = '#22c55e';
+                    btn.style.color = '#fff';
+                    setTimeout(() => window.location.href = '/', 800);
+                } else {
+                    throw new Error(data.error || 'Authenitfizierung fehlgeschlagen');
+                }
+            } catch (err) {
+                errorText.textContent = err.message || 'Verbindungsfehler';
+                errorDiv.style.display = 'flex';
+                btn.disabled = false;
+                btn.innerHTML = 'Zugang Anfordern';
+                btn.style.background = 'var(--primary)';
+                btn.style.color = '#000';
+            }
+        }
+    </script>
+</body>
+
+</html>
