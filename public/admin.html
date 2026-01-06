@@ -579,6 +579,115 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--text-secondary);
         }
+
+        .navbar-toggler {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            .page-header {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                padding: 16px;
+                gap: 12px;
+                align-items: center;
+            }
+
+            .page-title {
+                font-size: 20px;
+                width: auto;
+                margin: 0;
+            }
+
+            .navbar-toggler {
+                display: block;
+                background: var(--bg-tertiary);
+                border: 1px solid var(--border);
+                color: var(--text-primary);
+                padding: 8px 12px;
+                border-radius: 8px;
+                cursor: pointer;
+            }
+
+            .header-actions {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid var(--border);
+                gap: 12px;
+            }
+
+            .header-actions.active {
+                display: flex;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Tabs Mobile */
+            .tabs {
+                display: flex;
+                flex-wrap: wrap;
+                width: 100%;
+                gap: 8px;
+            }
+
+            .tab {
+                flex: 1 1 auto;
+                justify-content: center;
+                padding: 10px;
+                font-size: 13px;
+                text-align: center;
+            }
+
+            /* Responsive Table */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Card Header Stack */
+            .card-header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: stretch;
+            }
+
+            .card-header h3 {
+                justify-content: center;
+            }
+
+            /* Forms */
+            .form-row {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            /* Modals */
+            .modal {
+                height: 100%;
+                border-radius: 0;
+                max-height: none;
+            }
+
+            .modal-header {
+                border-radius: 0;
+            }
+
+            .modal-footer {
+                border-radius: 0;
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 
@@ -590,9 +699,14 @@
                     style="height: 32px; margin-right: 12px; vertical-align: middle;">
                 Admin-Panel
             </h1>
-            <a href="/" class="btn">
-                <i class="fas fa-arrow-left"></i> Zurück zum Rechner
-            </a>
+            <button class="navbar-toggler" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="header-actions">
+                <a href="/" class="btn">
+                    <i class="fas fa-arrow-left"></i> Zurück zum Rechner
+                </a>
+            </div>
         </div>
 
         <div class="tabs">
@@ -1254,6 +1368,9 @@
                 if (e.target === overlay) overlay.classList.remove('active');
             });
         });
+        function toggleMobileMenu() {
+            document.querySelector('.header-actions').classList.toggle('active');
+        }
     </script>
 </body>
 

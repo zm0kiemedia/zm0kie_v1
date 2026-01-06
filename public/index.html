@@ -223,6 +223,7 @@
             padding: 20px;
             border-bottom: 1px solid var(--border);
             background: var(--bg-tertiary);
+            border-radius: 15px 15px 0 0;
         }
 
         .calculator-sidebar-content {
@@ -402,10 +403,9 @@
         .selected-item {
             display: flex;
             align-items: center;
-            gap: 16px;
-            padding: 16px;
+            gap: 12px;
+            padding: 12px;
             background: var(--bg-tertiary);
-            /* Card-like for selected */
             border: 1px solid var(--border);
             border-radius: 10px;
             margin-bottom: 8px;
@@ -419,12 +419,34 @@
 
         .selected-item .info {
             flex: 1;
+            min-width: 0;
+            /* Text truncation fix */
+        }
+
+        .selected-item .name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+            line-height: 1.3;
+            margin-bottom: 2px;
+        }
+
+        .selected-item .details {
+            font-size: 12px;
+            color: var(--text-secondary);
+            opacity: 0.8;
         }
 
         .selected-item .btn-danger {
-            padding: 8px;
-            border-radius: 6px;
+            padding: 0;
+            border-radius: 8px;
             opacity: 0.7;
+            width: 32px !important;
+            height: 32px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
         .selected-item .btn-danger:hover {
@@ -509,6 +531,10 @@
             font-size: 12px;
             color: var(--text-secondary);
             margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .total-item .value {
@@ -760,6 +786,32 @@
             background: var(--text-secondary);
         }
 
+        /* Footer Classes for Responsiveness */
+        .footer-content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .footer-deco-line {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+
+        .navbar-toggler {
+            display: none;
+        }
+
         @media (max-width: 1200px) {
             .calculator-layout {
                 flex-direction: column;
@@ -798,6 +850,129 @@
             align-items: center;
             flex-wrap: nowrap;
         }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+                height: auto;
+                overflow-y: visible;
+                overflow-x: hidden;
+            }
+
+            body {
+                height: auto;
+                overflow-y: auto;
+            }
+
+            .page-header {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .page-title {
+                width: auto;
+                font-size: 18px;
+                justify-content: flex-start;
+                margin: 0;
+            }
+
+            .navbar-toggler {
+                display: block;
+                background: var(--bg-tertiary);
+                border: 1px solid var(--border);
+                color: var(--text-primary);
+                padding: 8px 12px;
+                border-radius: 8px;
+                cursor: pointer;
+            }
+
+            .header-actions {
+                display: none;
+                flex-direction: column;
+                gap: 12px;
+                width: 100%;
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid var(--border);
+            }
+
+            .header-actions.active {
+                display: flex;
+            }
+
+            .session-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            #userInfo {
+                width: 100%;
+                justify-content: space-between;
+                margin-right: 0 !important;
+                border-right: none !important;
+                margin-bottom: 8px;
+            }
+
+            .totals-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            .total-item:last-child {
+                grid-column: span 2;
+            }
+
+            .footer {
+                padding: 16px 0 !important;
+            }
+
+            .footer-content {
+                flex-direction: column !important;
+                gap: 16px !important;
+                padding: 0 16px;
+            }
+
+            .footer-deco-line {
+                width: 120px !important;
+            }
+
+            .footer-content>div:last-child {
+                flex-direction: row;
+                width: 100%;
+                gap: 12px;
+            }
+
+            .footer-content a {
+                flex: 1;
+                justify-content: center;
+                width: auto;
+                /* Reset explicit width */
+            }
+
+
+
+            .calculator-main,
+            .card,
+            .card-body,
+            #calcSelectedList {
+                overflow: visible !important;
+                height: auto !important;
+                flex: none !important;
+            }
+
+            #calcSelectedList {
+                max-height: none !important;
+            }
+        }
     </style>
 </head>
 
@@ -810,6 +985,9 @@
                     style="height: 32px; margin-right: 12px; vertical-align: middle;">
                 Straftatenrechner
             </h1>
+            <button class="navbar-toggler" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
             <div class="header-actions">
                 <div id="userInfo"
                     style="display: flex; align-items: center; gap: 12px; margin-right: 8px; border-right: 1px solid var(--border); padding-right: 16px;">
@@ -893,15 +1071,15 @@
                             <h4>Gesamtstrafe</h4>
                             <div class="totals-grid">
                                 <div class="total-item">
-                                    <div class="label">Hafteinheiten</div>
+                                    <div class="label"><i class="fas fa-clock"></i> Haftzeit</div>
                                     <div class="value jail" id="calcTotalJail">0</div>
                                 </div>
                                 <div class="total-item">
-                                    <div class="label">Geldstrafe</div>
+                                    <div class="label"><i class="fas fa-dollar-sign"></i> Geldstrafe</div>
                                     <div class="value fine" id="calcTotalFine">$0</div>
                                 </div>
                                 <div class="total-item">
-                                    <div class="label">StVO-Punkte</div>
+                                    <div class="label"><i class="fas fa-road"></i> StVO</div>
                                     <div class="value points" id="calcTotalPoints">0</div>
                                 </div>
                             </div>
@@ -936,12 +1114,9 @@
 
     <footer class="footer"
         style="padding: 24px 0; border-top: 1px solid var(--border); position: relative; overflow: hidden; background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);">
-        <div
-            style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 200px; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent);">
-        </div>
+        <div class="footer-deco-line"></div>
 
-        <div
-            style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 32px; max-width: 1200px; margin: 0 auto; padding: 0 24px;">
+        <div class="footer-content">
             <!-- Logo Left -->
             <img src="/assets/lawnet_badge_gray.png" alt="LawNet"
                 style="height: 28px; opacity: 0.4; filter: grayscale(100%); width: auto;">
@@ -1532,6 +1707,11 @@
                 // Ignore network errors, wait for next check
             }
         }, 10000); 
+    </script>
+    <script>
+        function toggleMobileMenu() {
+            document.querySelector('.header-actions').classList.toggle('active');
+        }
     </script>
 </body>
 
