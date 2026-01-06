@@ -1,55 +1,278 @@
+require('dotenv').config();
 const express = require('express');
 const Database = require('better-sqlite3');
 const { WebSocketServer } = require('ws');
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
+
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ==================== AUTO-GENERATE SESSION SECRET ====================
+// If no SESSION_SECRET is in .env, generate one and save it.
+const envPath = path.join(__dirname, '.env');
+if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'straftatenrechner-secret-key-change-me') {
+  console.log('⚠️  No secure SESSION_SECRET found. Generating a new one...');
+  try {
+    const newSecret = crypto.randomBytes(64).toString('hex');
+    process.env.SESSION_SECRET = newSecret;
+
+    let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+    if (envContent.includes('SESSION_SECRET=')) {
+      envContent = envContent.replace(/SESSION_SECRET=.*/g, `SESSION_SECRET=${newSecret}`);
+    } else {
+      if (envContent && !envContent.endsWith('\n')) envContent += '\n';
+      envContent += `SESSION_SECRET=${newSecret}\n`;
+    }
+    fs.writeFileSync(envPath, envContent);
+    console.log('✅ Generated and saved new SESSION_SECRET to .env');
+  } catch (err) {
+    console.error('❌ Failed to save SESSION_SECRET to .env:', err);
+    // Fallback to memory-only secret if file write fails (better than default)
+    process.env.SESSION_SECRET = crypto.randomBytes(64).toString('hex');
+  }
+}
+
 // Create HTTP server for both Express and WebSocket
 const server = http.createServer(app);
 
+// Configuration
+const LICENSE_KEY = process.env.LICENSE_KEY || 'LICENSE-XNVH-OPEO-IP5Z';
+let LICENSE_ADMIN_USER_ID = null;
+let IS_LICENSE_VALID = false;
+let LICENSE_ERROR_MSG = '';
+const NEXUS_URL = 'https://nexus.zm0kie.de';
+
+// License Validation
+async function validateLicense() {
+  console.log('Validating license against Nexus...');
+  try {
+    const response = await fetch(`${NEXUS_URL}/api/v1/license/validate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        license_key: LICENSE_KEY,
+        module_slug: process.env.MODULE_SLUG || 'straftatenrechner'
+      })
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      try {
+        const error = JSON.parse(text);
+        throw new Error(error.message || 'License validation failed');
+      } catch (e) {
+        throw new Error(text);
+      }
+    }
+
+    const data = await response.json();
+    if (!data.valid) {
+      throw new Error('License is invalid');
+    }
+
+    // Store admin user ID if present
+    if (data.admin_user_id) {
+      LICENSE_ADMIN_USER_ID = data.admin_user_id;
+      // console.log(`🔑 License Admin User ID set to: ${LICENSE_ADMIN_USER_ID}`);
+    }
+
+    console.log('✅ License validated successfully via Nexus');
+    IS_LICENSE_VALID = true;
+    return true;
+  } catch (error) {
+    console.error('❌ LICENSE ERROR:', error.message);
+    IS_LICENSE_VALID = false;
+    LICENSE_ERROR_MSG = error.message;
+    // Do NOT exit process, just mark invalid
+  }
+}
+
+// Check license every 10 seconds
+setInterval(validateLicense, 10 * 1000);
+
+// Trust Proxy (Required for secure cookies behind Nginx/Apache)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(express.json());
+app.use(cookieParser());
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'straftatenrechner-secret-key-change-me',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: true, // Force Secure Cookies (Requires HTTPS)
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Authentication Middleware
+const authMiddleware = async (req, res, next) => {
+  // 1. Always allow public access to calculator page and assets
+  if (req.method === 'GET' && (
+    req.path === '/' ||
+    req.path === '/index.html' ||
+    req.path === '/login' ||
+    req.path === '/login.html' ||
+    req.path.startsWith('/css/') ||
+    req.path.startsWith('/js/') ||
+    req.path.startsWith('/api/laws') ||     // Public read access to laws
+    req.path.startsWith('/api/law-categories') || // Public read access to categories
+    req.path.startsWith('/api/calc-sessions') || // Public join/read sessions
+    req.path === '/api/user' // Check user status is public (returns null if empty)
+  )) {
+    res.locals.user = req.session ? req.session.user : null;
+    return next();
+  }
+
+  // 2. Allow login API
+  if (req.path === '/api/auth/login' && req.method === 'POST') {
+    return next();
+  }
+
+  // 3. Allow session creation and updates (Public)
+  if (req.path.startsWith('/api/calc-sessions') && (req.method === 'POST' || req.method === 'PUT')) {
+    return next();
+  }
+
+  // 4. Allow reading settings (Public)
+  if (req.path === '/api/settings' && req.method === 'GET') {
+    return next();
+  }
+
+  // 5. Allow access to static assets (logos, images, etc.)
+  if (req.path.startsWith('/assets/')) {
+    return next();
+  }
+
+  // 6. Everything else (Admin pages, write APIs) is PROTECTED
+  if (!req.session || !req.session.user) {
+    if (req.path.startsWith('/api/')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    return res.redirect('/login');
+  }
+
+  // Pass user info to response locals for potential use
+  res.locals.user = req.session.user;
+  next();
+};
+
+// Serve login page
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// API Endpoint for License Status (Public/No Auth)
+app.get('/api/license-status', async (req, res) => {
+  // If currently invalid, try to revalidate immediately
+  if (!IS_LICENSE_VALID) {
+    await validateLicense();
+  }
+  res.json({ valid: IS_LICENSE_VALID });
+});
+
+// License Protection Middleware
+app.use((req, res, next) => {
+  // 1. Allow license error page
+  if (req.path === '/license-error') {
+    return next();
+  }
+
+  // 2. Allow static assets (css, js, fonts) so error page renders nicely
+  if (req.path.startsWith('/css/') || req.path.startsWith('/js/') || req.path.startsWith('/assets/')) {
+    return next();
+  }
+
+  // 3. Block everything else if license is invalid
+  if (!IS_LICENSE_VALID) {
+    return res.redirect('/license-error');
+  }
+
+  next();
+});
+
+// Serve license error page
+app.get('/license-error', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'license-error.html'));
+});
+
+// Protect all routes and static files
+app.use(authMiddleware);
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Data directory for network databases
+// Login endpoint (Proxy to Nexus)
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Call Nexus API to verify credentials
+    const response = await fetch('https://nexus.zm0kie.de/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      const user = data.user;
+
+      // Grant admin rights if user matches the license admin
+      if (LICENSE_ADMIN_USER_ID && user.id === LICENSE_ADMIN_USER_ID) {
+        console.log(`User ${user.username} recognized as License Admin. Granting admin rights.`);
+        user.is_admin = true;
+      }
+
+      req.session.user = user;
+      req.session.save();
+      res.json({ success: true, user: user });
+    } else {
+      res.status(401).json({ error: 'Ungültige Zugangsdaten' });
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Verbindungsfehler zum Auth-Server' });
+  }
+});
+
+// Logout route
+app.get('/auth/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) console.error('Logout error:', err);
+    res.clearCookie('connect.sid'); // Force clear cookie
+    res.redirect('/'); // Redirect to Home (Guest Mode)
+  });
+});
+
+// API endpoint to get current user info
+app.get('/api/user', (req, res) => {
+  if (req.session && req.session.user) {
+    res.json(req.session.user);
+  } else {
+    res.json(null); // Explicit null for guests
+  }
+});
+
+// Data directory for database
 const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// Main database for networks management
-const mainDbPath = path.join(dataDir, 'main.db');
-const mainDb = new Database(mainDbPath);
+// Single application database
+const dbPath = path.join(dataDir, 'app.db');
+const db = new Database(dbPath);
 
-// Initialize main database tables
-mainDb.exec(`
-  CREATE TABLE IF NOT EXISTS networks (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    password TEXT NOT NULL,
-    admin_password TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`);
-
-// Cache for network database connections
-const networkDbs = new Map();
-
-// Get or create network database connection
-function getNetworkDb(networkId) {
-  if (networkDbs.has(networkId)) {
-    return networkDbs.get(networkId);
-  }
-
-  const dbPath = path.join(dataDir, `network_${networkId}.db`);
-  const db = new Database(dbPath);
-
-  // Initialize network-specific tables
-  db.exec(`
+// Initialize application tables
+db.exec(`
     CREATE TABLE IF NOT EXISTS laws (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       category TEXT NOT NULL,
@@ -67,7 +290,7 @@ function getNetworkDb(networkId) {
     )
   `);
 
-  db.exec(`
+db.exec(`
     CREATE TABLE IF NOT EXISTS law_categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT UNIQUE NOT NULL,
@@ -75,7 +298,7 @@ function getNetworkDb(networkId) {
     )
   `);
 
-  db.exec(`
+db.exec(`
     CREATE TABLE IF NOT EXISTS calc_sessions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       code TEXT UNIQUE NOT NULL,
@@ -86,16 +309,27 @@ function getNetworkDb(networkId) {
     )
   `);
 
-  // Insert default laws if empty
-  const lawCount = db.prepare('SELECT COUNT(*) as count FROM laws').get().count;
-  if (lawCount === 0) {
-    console.log(`Inserting default laws for network ${networkId}...`);
-    insertDefaultLaws(db);
-  }
-
-  networkDbs.set(networkId, db);
-  return db;
+// Insert default laws if empty
+const lawCount = db.prepare('SELECT COUNT(*) as count FROM laws').get().count;
+if (lawCount === 0) {
+  console.log('Inserting default laws...');
+  insertDefaultLaws(db);
 }
+
+db.exec(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `);
+
+// Initialize default settings
+const insertSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
+insertSetting.run('limit_fine', '50000');
+insertSetting.run('limit_jail', '90');
+insertSetting.run('tax_judiciary', '20');
+insertSetting.run('multiplier_crime', '1.5');
+insertSetting.run('multiplier_terror', '2.0');
 
 // Default laws template
 function insertDefaultLaws(db) {
@@ -184,13 +418,24 @@ wss.on('connection', (ws) => {
       const data = JSON.parse(message);
 
       if (data.type === 'join') {
-        // Join a calculator session (network-scoped)
-        ws.sessionKey = `${data.networkId}:${data.code}`;
+        // Join a calculator session
+        ws.sessionKey = data.code;
         if (!calcSessions.has(ws.sessionKey)) {
           calcSessions.set(ws.sessionKey, new Set());
         }
         calcSessions.get(ws.sessionKey).add(ws);
         console.log(`Client joined session: ${ws.sessionKey}`);
+
+        // Send current session state to the new client
+        const currentSession = db.prepare('SELECT * FROM calc_sessions WHERE code = ?').get(data.code);
+        if (currentSession) {
+          ws.send(JSON.stringify({
+            type: 'sync',
+            selected_offenses: JSON.parse(currentSession.selected_offenses),
+            modifiers: JSON.parse(currentSession.modifiers),
+            notes: currentSession.notes
+          }));
+        }
       }
 
       if (data.type === 'update' && ws.sessionKey) {
@@ -225,145 +470,10 @@ wss.on('connection', (ws) => {
   });
 });
 
-// ==================== NETWORK ROUTES ====================
+// ==================== LAW MANAGEMENT ROUTES ====================
 
-// Get all networks (public list)
-app.get('/api/networks', (req, res) => {
-  const networks = mainDb.prepare('SELECT id, name, created_at FROM networks ORDER BY name').all();
-  res.json(networks);
-});
-
-// Create new network
-app.post('/api/networks', (req, res) => {
-  const { name, password, adminPassword } = req.body;
-
-  if (!name || !password || !adminPassword) {
-    return res.status(400).json({ error: 'Name, Passwort und Admin-Passwort sind erforderlich' });
-  }
-
-  if (password.length < 4) {
-    return res.status(400).json({ error: 'Passwort muss mindestens 4 Zeichen haben' });
-  }
-
-  if (adminPassword.length < 4) {
-    return res.status(400).json({ error: 'Admin-Passwort muss mindestens 4 Zeichen haben' });
-  }
-
-  try {
-    const id = generateNetworkId();
-    mainDb.prepare('INSERT INTO networks (id, name, password, admin_password) VALUES (?, ?, ?, ?)').run(id, name.trim(), password, adminPassword);
-
-    // Initialize the network database
-    getNetworkDb(id);
-
-    res.json({ id, name: name.trim(), message: 'Netzwerk erstellt' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Join network (verify password)
-app.post('/api/networks/:id/join', (req, res) => {
-  const { password } = req.body;
-  const network = mainDb.prepare('SELECT * FROM networks WHERE id = ?').get(req.params.id);
-
-  if (!network) {
-    return res.status(404).json({ error: 'Netzwerk nicht gefunden' });
-  }
-
-  if (network.password !== password) {
-    return res.status(401).json({ error: 'Falsches Passwort' });
-  }
-
-  res.json({ id: network.id, name: network.name });
-});
-
-// Verify admin password for a network
-app.post('/api/networks/:id/admin', (req, res) => {
-  const { adminPassword } = req.body;
-  const network = mainDb.prepare('SELECT * FROM networks WHERE id = ?').get(req.params.id);
-
-  if (!network) {
-    return res.status(404).json({ error: 'Netzwerk nicht gefunden' });
-  }
-
-  if (network.admin_password !== adminPassword) {
-    return res.status(401).json({ error: 'Falsches Admin-Passwort' });
-  }
-
-  res.json({ success: true });
-});
-
-// Update network settings
-app.put('/api/networks/:id', (req, res) => {
-  const { name, password, adminPassword, currentAdminPassword } = req.body;
-  const network = mainDb.prepare('SELECT * FROM networks WHERE id = ?').get(req.params.id);
-
-  if (!network) {
-    return res.status(404).json({ error: 'Netzwerk nicht gefunden' });
-  }
-
-  if (network.admin_password !== currentAdminPassword) {
-    return res.status(401).json({ error: 'Falsches Admin-Passwort' });
-  }
-
-  const updates = [];
-  const params = [];
-
-  if (name) {
-    updates.push('name = ?');
-    params.push(name.trim());
-  }
-  if (password) {
-    updates.push('password = ?');
-    params.push(password);
-  }
-  if (adminPassword) {
-    updates.push('admin_password = ?');
-    params.push(adminPassword);
-  }
-
-  if (updates.length > 0) {
-    params.push(req.params.id);
-    mainDb.prepare(`UPDATE networks SET ${updates.join(', ')} WHERE id = ?`).run(...params);
-  }
-
-  res.json({ message: 'Netzwerk aktualisiert' });
-});
-
-// Delete network
-app.delete('/api/networks/:id', (req, res) => {
-  const { adminPassword } = req.body;
-  const network = mainDb.prepare('SELECT * FROM networks WHERE id = ?').get(req.params.id);
-
-  if (!network) {
-    return res.status(404).json({ error: 'Netzwerk nicht gefunden' });
-  }
-
-  if (network.admin_password !== adminPassword) {
-    return res.status(401).json({ error: 'Falsches Admin-Passwort' });
-  }
-
-  // Close and delete network database
-  if (networkDbs.has(req.params.id)) {
-    networkDbs.get(req.params.id).close();
-    networkDbs.delete(req.params.id);
-  }
-
-  const dbPath = path.join(dataDir, `network_${req.params.id}.db`);
-  if (fs.existsSync(dbPath)) {
-    fs.unlinkSync(dbPath);
-  }
-
-  mainDb.prepare('DELETE FROM networks WHERE id = ?').run(req.params.id);
-  res.json({ message: 'Netzwerk gelöscht' });
-});
-
-// ==================== NETWORK-SCOPED API ROUTES ====================
-
-// Get all laws for a network
-app.get('/api/networks/:networkId/laws', (req, res) => {
-  const db = getNetworkDb(req.params.networkId);
+// Get all laws
+app.get('/api/laws', (req, res) => {
   const { category, search } = req.query;
   let query = 'SELECT * FROM laws';
   const params = [];
@@ -388,8 +498,7 @@ app.get('/api/networks/:networkId/laws', (req, res) => {
 });
 
 // Get single law
-app.get('/api/networks/:networkId/laws/:id', (req, res) => {
-  const db = getNetworkDb(req.params.networkId);
+app.get('/api/laws/:id', (req, res) => {
   const law = db.prepare('SELECT * FROM laws WHERE id = ?').get(req.params.id);
   if (!law) {
     return res.status(404).json({ error: 'Gesetz nicht gefunden' });
@@ -398,8 +507,7 @@ app.get('/api/networks/:networkId/laws/:id', (req, res) => {
 });
 
 // Create law
-app.post('/api/networks/:networkId/laws', (req, res) => {
-  const db = getNetworkDb(req.params.networkId);
+app.post('/api/laws', (req, res) => {
   const { category, paragraph, title, description, fine_min, fine_max, jail_min, jail_max, points, is_felony } = req.body;
 
   if (!category || !paragraph || !title) {
@@ -416,8 +524,7 @@ app.post('/api/networks/:networkId/laws', (req, res) => {
 });
 
 // Update law
-app.put('/api/networks/:networkId/laws/:id', (req, res) => {
-  const db = getNetworkDb(req.params.networkId);
+app.put('/api/laws/:id', (req, res) => {
   const { category, paragraph, title, description, fine_min, fine_max, jail_min, jail_max, points, is_felony } = req.body;
 
   db.prepare(`
@@ -433,22 +540,19 @@ app.put('/api/networks/:networkId/laws/:id', (req, res) => {
 });
 
 // Delete law
-app.delete('/api/networks/:networkId/laws/:id', (req, res) => {
-  const db = getNetworkDb(req.params.networkId);
+app.delete('/api/laws/:id', (req, res) => {
   db.prepare('DELETE FROM laws WHERE id = ?').run(req.params.id);
-  res.json({ message: 'Gesetz gelöscht' });
+  res.json({ message: 'Gesetz geloescht' });
 });
 
 // Get law categories
-app.get('/api/networks/:networkId/law-categories', (req, res) => {
-  const db = getNetworkDb(req.params.networkId);
+app.get('/api/law-categories', (req, res) => {
   const categories = db.prepare('SELECT DISTINCT category FROM laws ORDER BY category').all();
   res.json(categories.map(c => c.category));
 });
 
 // Create new category
-app.post('/api/networks/:networkId/law-categories', (req, res) => {
-  const db = getNetworkDb(req.params.networkId);
+app.post('/api/law-categories', (req, res) => {
   const { name } = req.body;
   if (!name || !name.trim()) {
     return res.status(400).json({ error: 'Kategorie-Name ist erforderlich' });
@@ -468,8 +572,7 @@ app.post('/api/networks/:networkId/law-categories', (req, res) => {
 });
 
 // Rename category
-app.put('/api/networks/:networkId/law-categories/rename', (req, res) => {
-  const db = getNetworkDb(req.params.networkId);
+app.put('/api/law-categories/rename', (req, res) => {
   const { oldName, newName } = req.body;
   if (!oldName || !newName || !newName.trim()) {
     return res.status(400).json({ error: 'Alter und neuer Name sind erforderlich' });
@@ -485,22 +588,50 @@ app.put('/api/networks/:networkId/law-categories/rename', (req, res) => {
 });
 
 // Delete category
-app.delete('/api/networks/:networkId/law-categories/:name', (req, res) => {
-  const db = getNetworkDb(req.params.networkId);
+app.delete('/api/law-categories/:name', (req, res) => {
   const name = decodeURIComponent(req.params.name);
 
   const lawCount = db.prepare('SELECT COUNT(*) as count FROM laws WHERE category = ?').get(name).count;
   if (lawCount > 0) {
-    return res.status(400).json({ error: `Kategorie enthält ${lawCount} Gesetze und kann nicht gelöscht werden` });
+    return res.status(400).json({ error: `Kategorie enthaelt ${lawCount} Gesetze und kann nicht geloescht werden` });
   }
 
   db.prepare('DELETE FROM law_categories WHERE name = ?').run(name);
-  res.json({ message: 'Kategorie gelöscht' });
+  res.json({ message: 'Kategorie geloescht' });
 });
 
-// ==================== CALCULATOR SESSIONS (Network-scoped) ====================
 
-function generateCalcSessionCode(db) {
+
+// ==================== SETTINGS (ADMIN) ====================
+
+app.get('/api/settings', (req, res) => {
+  try {
+    const limits = {};
+    const settings = db.prepare('SELECT * FROM settings').all();
+    settings.forEach(s => limits[s.key] = s.value);
+    res.json(limits);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/settings', (req, res) => {
+  try {
+    const { limit_fine, limit_jail } = req.body;
+    const upsert = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
+
+    if (limit_fine) upsert.run('limit_fine', limit_fine.toString());
+    if (limit_jail) upsert.run('limit_jail', limit_jail.toString());
+
+    res.json({ message: 'Einstellungen gespeichert' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==================== CALCULATOR SESSIONS ====================
+
+function generateCalcSessionCode() {
   let code;
   do {
     code = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
@@ -509,11 +640,21 @@ function generateCalcSessionCode(db) {
 }
 
 // Create calculator session
-app.post('/api/networks/:networkId/calc-sessions', (req, res) => {
-  const db = getNetworkDb(req.params.networkId);
+app.post('/api/calc-sessions', (req, res) => {
   try {
-    const code = generateCalcSessionCode(db);
-    db.prepare('INSERT INTO calc_sessions (code) VALUES (?)').run(code);
+    const code = generateCalcSessionCode();
+    const { selected_offenses, modifiers, notes } = req.body;
+
+    db.prepare(`
+      INSERT INTO calc_sessions (code, selected_offenses, modifiers, notes)
+      VALUES (?, ?, ?, ?)
+    `).run(
+      code,
+      JSON.stringify(selected_offenses || []),
+      JSON.stringify(modifiers || {}),
+      notes || ''
+    );
+
     res.json({ code });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -521,8 +662,7 @@ app.post('/api/networks/:networkId/calc-sessions', (req, res) => {
 });
 
 // Get calculator session
-app.get('/api/networks/:networkId/calc-sessions/:code', (req, res) => {
-  const db = getNetworkDb(req.params.networkId);
+app.get('/api/calc-sessions/:code', (req, res) => {
   try {
     const session = db.prepare('SELECT * FROM calc_sessions WHERE code = ?').get(req.params.code);
     if (!session) {
@@ -541,8 +681,7 @@ app.get('/api/networks/:networkId/calc-sessions/:code', (req, res) => {
 });
 
 // Update calculator session
-app.put('/api/networks/:networkId/calc-sessions/:code', (req, res) => {
-  const db = getNetworkDb(req.params.networkId);
+app.put('/api/calc-sessions/:code', (req, res) => {
   try {
     const { selected_offenses, modifiers, notes } = req.body;
     const code = req.params.code;
@@ -568,16 +707,14 @@ app.put('/api/networks/:networkId/calc-sessions/:code', (req, res) => {
   }
 });
 
-// Cleanup old calculator sessions (runs for all networks)
+// Cleanup old calculator sessions
 setInterval(() => {
   try {
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    networkDbs.forEach((db, networkId) => {
-      const result = db.prepare('DELETE FROM calc_sessions WHERE updated_at < ?').run(cutoff);
-      if (result.changes > 0) {
-        console.log(`${result.changes} alte Calculator-Sessions in Netzwerk ${networkId} gelöscht`);
-      }
-    });
+    const result = db.prepare('DELETE FROM calc_sessions WHERE updated_at < ?').run(cutoff);
+    if (result.changes > 0) {
+      console.log(`${result.changes} alte Calculator-Sessions geloescht`);
+    }
   } catch (error) {
     console.error('Fehler beim Aufraeumen der Calculator-Sessions:', error);
   }
@@ -588,6 +725,10 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-server.listen(PORT, () => {
-  console.log(`Straftatenrechner running on port ${PORT}`);
+// Start Server
+validateLicense().then(() => {
+  server.listen(PORT, () => {
+    console.log(`Straftatenrechner running on port ${PORT}`);
+    console.log(`License Key: ${LICENSE_KEY.substring(0, 10)}...`);
+  });
 });

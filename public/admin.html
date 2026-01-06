@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Straftatenrechner</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="/assets/lawnet_badge.png">
     <style>
         :root {
             --bg-primary: #0a0a0b;
@@ -14,16 +15,18 @@
             --bg-hover: #28282e;
             --text-primary: #ffffff;
             --text-secondary: #8b8b95;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --accent-glow: rgba(59, 130, 246, 0.15);
+            --accent: #fe8900;
+            --accent-hover: #e67a00;
+            --accent-glow: rgba(254, 137, 0, 0.15);
+            --accent-secondary: #17a2b8;
+            --accent-secondary-hover: #1cb3cc;
+            --accent-secondary-glow: rgba(23, 162, 184, 0.15);
             --danger: #ef4444;
             --danger-glow: rgba(239, 68, 68, 0.15);
             --success: #22c55e;
             --success-glow: rgba(34, 197, 94, 0.15);
             --warning: #f59e0b;
             --warning-glow: rgba(245, 158, 11, 0.15);
-            --primary: #3b82f6;
             --border: #2a2a30;
             --border-light: #3a3a42;
         }
@@ -39,21 +42,29 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 24px;
+            padding: 32px 24px;
+            flex: 1;
+            width: 100%;
         }
 
+        /* Page Header */
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
+            margin-bottom: 32px;
+            padding: 20px 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .page-title {
@@ -66,117 +77,99 @@
 
         .page-title i {
             color: var(--accent);
-        }
-
-        .network-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            background: var(--warning-glow);
-            border: 1px solid var(--warning);
-            border-radius: 6px;
-            font-size: 13px;
-            color: var(--warning);
-            margin-left: 16px;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
             background: var(--bg-tertiary);
-            color: var(--text-primary);
-            text-decoration: none;
-        }
-
-        .btn:hover {
-            background: var(--bg-hover);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--accent-hover) 0%, #1d4ed8 100%);
-            transform: translateY(-1px);
-        }
-
-        .btn-danger {
-            background: var(--danger-glow);
-            border: 1px solid var(--danger);
-            color: var(--danger);
-        }
-
-        .btn-danger:hover {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-success {
-            background: var(--success-glow);
-            border: 1px solid var(--success);
-            color: var(--success);
-        }
-
-        .btn-success:hover {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 13px;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 24px;
-            background: var(--bg-secondary);
-            padding: 4px;
+            padding: 10px;
             border-radius: 10px;
-            width: fit-content;
+            border: 1px solid var(--border);
+        }
+
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 24px;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .footer p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .footer span {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: inline-flex;
+            background: var(--bg-secondary);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+            gap: 6px;
         }
 
         .tab {
             padding: 10px 20px;
             border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 14px;
             color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .tab:hover {
-            background: var(--bg-tertiary);
+        .tab:hover:not(.active) {
+            background: var(--bg-hover);
             color: var(--text-primary);
         }
 
         .tab.active {
-            background: var(--accent);
-            color: white;
+            background: var(--bg-tertiary);
+            color: var(--accent);
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Cards */
         .card {
             background: var(--bg-secondary);
-            border-radius: 12px;
+            border-radius: 16px;
             border: 1px solid var(--border);
             overflow: hidden;
             margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .card-header {
-            padding: 16px 20px;
+            padding: 20px 24px;
             background: var(--bg-tertiary);
             border-bottom: 1px solid var(--border);
             display: flex;
@@ -185,102 +178,39 @@
         }
 
         .card-header h3 {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .card-body {
-            padding: 20px;
+            padding: 24px;
         }
 
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-        }
-
+        /* Controls */
         .form-control {
             width: 100%;
-            padding: 10px 14px;
             background: var(--bg-primary);
             border: 1px solid var(--border);
-            border-radius: 8px;
             color: var(--text-primary);
+            padding: 12px 16px;
+            border-radius: 10px;
+            transition: all 0.2s;
             font-size: 14px;
         }
 
         .form-control:focus {
-            outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
-        }
-
-        .table-container {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 12px 16px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th {
-            background: var(--bg-tertiary);
-            font-weight: 600;
-            font-size: 12px;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-        }
-
-        tr:hover td {
-            background: var(--bg-tertiary);
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .badge-danger {
-            background: var(--danger-glow);
-            color: var(--danger);
-        }
-
-        .badge-success {
-            background: var(--success-glow);
-            color: var(--success);
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
+            outline: none;
         }
 
         .search-container {
+            margin-bottom: 24px;
             position: relative;
-            margin-bottom: 16px;
         }
 
         .search-icon {
@@ -292,21 +222,178 @@
         }
 
         .search-input {
-            width: 100%;
-            padding: 12px 16px 12px 44px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
+            padding-left: 44px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
             border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--bg-hover);
+            transform: translateY(-1px);
+            border-color: var(--text-secondary);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--accent-hover) 0%, #1d4ed8 100%);
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+            border: none;
+            /* Override hover border */
+        }
+
+        .btn-danger {
+            background: var(--danger-glow);
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        /* Table */
+        .table-container {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
             color: var(--text-primary);
             font-size: 14px;
         }
 
-        .search-input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
+        tr:last-child td {
+            border-bottom: none;
         }
 
+        tr:hover td {
+            background: var(--bg-hover);
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .badge-success {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Categories List */
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .category-item:hover {
+            border-color: var(--accent);
+            background: var(--bg-hover);
+        }
+
+        .category-item .name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .category-item .count {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Forms in Modal */
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            flex: 1;
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Modal Overlay */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -314,109 +401,174 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
             z-index: 1000;
-            justify-content: center;
             align-items: center;
-            padding: 20px;
+            justify-content: center;
         }
 
         .modal-overlay.active {
             display: flex;
+            animation: fadeIn 0.2s;
         }
 
         .modal {
             background: var(--bg-secondary);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            max-width: 600px;
+            border-radius: 16px;
             width: 100%;
+            max-width: 600px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
             max-height: 90vh;
-            overflow-y: auto;
         }
 
         .modal-header {
-            padding: 20px;
+            padding: 20px 24px;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: var(--bg-tertiary);
+            border-radius: 16px 16px 0 0;
         }
 
-        .modal-header h3 {
-            font-size: 18px;
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 0 0 16px 16px;
         }
 
         .modal-close {
             background: none;
             border: none;
             color: var(--text-secondary);
+            font-size: 24px;
             cursor: pointer;
-            font-size: 20px;
-            padding: 4px;
         }
 
         .modal-close:hover {
             color: var(--text-primary);
         }
 
-        .modal-body {
-            padding: 20px;
+        /* Premium Checkbox Component */
+        .form-control-checkbox {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            width: 100%;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            height: 43px;
+            user-select: none;
+            box-sizing: border-box;
+            /* Ensure padding doesn't break width */
         }
 
-        .modal-footer {
-            padding: 16px 20px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
+        .form-control-checkbox:hover {
+            border-color: var(--text-secondary);
+            background: var(--bg-hover);
         }
 
-        .category-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
-
-        .category-item .name {
-            font-weight: 500;
-        }
-
-        .category-item .count {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .empty-state {
-            padding: 40px;
-            text-align: center;
-            color: var(--text-secondary);
-        }
-
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 16px;
-            opacity: 0.3;
-        }
-
-        .tab-content {
+        .form-control-checkbox input {
             display: none;
         }
 
-        .tab-content.active {
-            display: block;
+        .form-control-checkbox .label-text {
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 500;
+            flex: 1 1 auto;
+            /* Grow and shrink if needed, but prefer auto */
+            margin-right: 12px;
+            white-space: nowrap;
+            /* Prevent text wrapping */
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
+        .checkbox-visual {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            /* Prevent shrinking */
+            min-height: 24px;
+            border: 2px solid var(--text-secondary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: transparent;
+            color: transparent;
+            flex-shrink: 0 !important;
+            /* Force no shrinking */
+        }
+
+        .form-control-checkbox:hover .checkbox-visual {
+            border-color: var(--text-primary);
+        }
+
+        /* Checked State */
+        .form-control-checkbox input:checked+.checkbox-visual {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 0 10px var(--danger-glow);
+        }
+
+        .form-control-checkbox input:checked+.checkbox-visual i {
+            transform: scale(1);
+        }
+
+        .checkbox-visual i {
+            font-size: 14px;
+            transform: scale(0);
+            transition: transform 0.2s ease;
+        }
+
+        /* Category Header in Table */
+        tr.category-header td {
+            background: var(--bg-secondary);
+            color: var(--accent-secondary);
+            font-weight: 600;
+            padding: 12px 20px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border);
+            letter-spacing: 0.5px;
+        }
+
+        tr.category-header:hover td {
+            background: var(--bg-secondary);
+            /* No hover effect on headers */
+        }
+
+        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--bg-primary);
+            background: transparent;
         }
 
         ::-webkit-scrollbar-thumb {
@@ -427,22 +579,6 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--text-secondary);
         }
-
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .checkbox-wrapper input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--accent);
-        }
-
-        select.form-control {
-            cursor: pointer;
-        }
     </style>
 </head>
 
@@ -450,12 +586,9 @@
     <div class="container">
         <div class="page-header">
             <h1 class="page-title">
-                <i class="fas fa-cog"></i>
+                <img src="/assets/lawnet_badge.png" alt="LAWNET"
+                    style="height: 32px; margin-right: 12px; vertical-align: middle;">
                 Admin-Panel
-                <span class="network-badge" id="networkBadge">
-                    <i class="fas fa-network-wired"></i>
-                    <span id="networkName"></span>
-                </span>
             </h1>
             <a href="/" class="btn">
                 <i class="fas fa-arrow-left"></i> Zurück zum Rechner
@@ -466,8 +599,11 @@
             <div class="tab active" onclick="switchTab('laws')">
                 <i class="fas fa-gavel"></i> Gesetze
             </div>
-            <div class="tab" onclick="switchTab('categories')">
+            <div class="tab passive" onclick="switchTab('categories')">
                 <i class="fas fa-folder"></i> Kategorien
+            </div>
+            <div class="tab" onclick="switchTab('settings')">
+                <i class="fas fa-sliders-h"></i> Einstellungen
             </div>
         </div>
 
@@ -484,14 +620,13 @@
                 <div class="card-body">
                     <div class="search-container">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" class="search-input" id="lawSearch" placeholder="Gesetz suchen..."
-                            oninput="filterLaws()">
+                        <input type="text" class="form-control search-input" id="lawSearch"
+                            placeholder="Gesetz suchen..." oninput="filterLaws()">
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Kategorie</th>
                                     <th>Paragraph</th>
                                     <th>Titel</th>
                                     <th>Geldstrafe</th>
@@ -520,6 +655,64 @@
                 </div>
                 <div class="card-body">
                     <div id="categoriesList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div class="tab-content" id="tab-settings">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-sliders-h" style="margin-right: 8px; color: var(--accent);"></i>Rechner
+                        Einstellungen</h3>
+                    <button class="btn btn-primary" onclick="saveSettings()">
+                        <i class="fas fa-save"></i> Speichern
+                    </button>
+                </div>
+                <div class="card-body">
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                        Hier kannst du die Grenzwerte festlegen, ab denen eine Warnung im Rechner angezeigt wird.
+                    </p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Warnung ab Geldstrafe ($)</label>
+                            <input type="number" class="form-control" id="settingLimitFine" placeholder="50000">
+                        </div>
+                        <div class="form-group">
+                            <label>Warnung ab Hafteinheiten (Minuten)</label>
+                            <input type="number" class="form-control" id="settingLimitJail" placeholder="90">
+                        </div>
+                    </div>
+
+                    <div class="settings-divider" style="height: 1px; background: var(--border); margin: 24px 0;"></div>
+
+                    <h4 style="margin-bottom: 16px; color: var(--text-primary);">Logik Einstellungen</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Judikative Anteil (%)</label>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Prozentsatz,
+                                der von der Haftzeit abgezogen wird, wenn die Judikative ohne Richter übernommen wird.
+                            </p>
+                            <input type="number" class="form-control" id="settingTaxJudiciary" placeholder="20" min="0"
+                                max="100">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Multiplikator: Verbrechen</label>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Faktor für
+                                Strafe/Haft bei "Verbrechen"-Status.</p>
+                            <input type="number" class="form-control" id="settingMultiplierCrime" placeholder="1.5"
+                                step="0.1" min="1.0">
+                        </div>
+                        <div class="form-group">
+                            <label>Multiplikator: Terror</label>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Faktor für
+                                Strafe/Haft bei "Terror"-Status.</p>
+                            <input type="number" class="form-control" id="settingMultiplierTerror" placeholder="2.0"
+                                step="0.1" min="1.0">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -583,11 +776,13 @@
                     </div>
                     <div class="form-group">
                         <label>&nbsp;</label>
-                        <div class="checkbox-wrapper" style="height: 42px; display: flex; align-items: center;">
+                        <label class="form-control-checkbox">
+                            <span class="label-text">Ist ein Verbrechen</span>
                             <input type="checkbox" id="lawIsFelony">
-                            <label for="lawIsFelony" style="margin: 0; color: var(--text-primary);">Ist ein
-                                Verbrechen</label>
-                        </div>
+                            <div class="checkbox-visual">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                        </label>
                     </div>
                 </div>
             </div>
@@ -643,9 +838,66 @@
         </div>
     </div>
 
+    <!-- Info Modal -->
+    <div class="modal-overlay" id="infoModal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Information</h3>
+                <button class="modal-close" onclick="closeModal('infoModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="infoMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('infoModal')">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer"
+        style="padding: 24px 0; border-top: 1px solid var(--border); position: relative; overflow: hidden; background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);">
+        <div
+            style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 200px; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent);">
+        </div>
+
+        <div
+            style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 32px; max-width: 1200px; margin: 0 auto; padding: 0 24px;">
+            <!-- Logo Left -->
+            <img src="/assets/lawnet_badge_gray.png" alt="LawNet"
+                style="height: 28px; opacity: 0.4; filter: grayscale(100%); width: auto;">
+
+            <!-- Center Text -->
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;">
+                <p
+                    style="margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; letter-spacing: 2px; color: var(--text-primary); text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                    LawNet System <span style="color: var(--accent);">&bull;</span> &copy; 2026
+                </p>
+                <p
+                    style="margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 10px; letter-spacing: 1.5px; color: var(--text-secondary); opacity: 0.5;">
+                    SECURE CONNECTION ESTABLISHED
+                </p>
+            </div>
+
+            <!-- Buttons Right -->
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <a href="https://discord.gg/kVcN4H9ZNC" target="_blank"
+                    style="font-size: 11px; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border); padding: 6px 16px; border-radius: 4px; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; background: var(--bg-tertiary);"
+                    onmouseover="this.style.borderColor='var(--accent)'; this.style.color='var(--accent)'; this.style.boxShadow='0 0 10px var(--accent-glow)';"
+                    onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-secondary)'; this.style.boxShadow='none';">
+                    <i class="fab fa-discord"></i> Support
+                </a>
+                <a href="https://lawnet.sale" target="_blank"
+                    style="font-size: 11px; color: var(--text-secondary); text-decoration: none; border: 1px solid var(--border); padding: 6px 16px; border-radius: 4px; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; background: var(--bg-tertiary);"
+                    onmouseover="this.style.borderColor='var(--accent)'; this.style.color='var(--accent)'; this.style.boxShadow='0 0 10px var(--accent-glow)';"
+                    onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-secondary)'; this.style.boxShadow='none';">
+                    <i class="fas fa-globe"></i> Webseite
+                </a>
+            </div>
+        </div>
+    </footer>
+
     <script>
         const API_URL = '';
-        let currentNetwork = null;
         let allLaws = [];
         let allCategories = [];
 
@@ -666,18 +918,29 @@
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.tab:nth-child(${tab === 'laws' ? 1 : 2})`).classList.add('active');
+
+            // Set active tab button
+            const tabButtons = document.querySelectorAll('.tab');
+            if (tab === 'laws') tabButtons[0].classList.add('active');
+            else if (tab === 'categories') tabButtons[1].classList.add('active');
+            else if (tab === 'settings') tabButtons[2].classList.add('active');
+
+            // Set active content
             document.getElementById(`tab-${tab}`).classList.add('active');
         }
 
         // Modal functions
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function showInfo(msg) {
+            document.getElementById('infoMessage').textContent = msg;
+            openModal('infoModal');
+        }
 
         // Load data
         async function loadLaws() {
             try {
-                allLaws = await api(`/api/networks/${currentNetwork.id}/laws`);
+                allLaws = await api('/api/laws');
                 renderLaws();
             } catch (err) {
                 console.error('Failed to load laws:', err);
@@ -686,7 +949,7 @@
 
         async function loadCategories() {
             try {
-                allCategories = await api(`/api/networks/${currentNetwork.id}/law-categories`);
+                allCategories = await api('/api/law-categories');
                 renderCategories();
                 updateCategorySelect();
             } catch (err) {
@@ -705,31 +968,56 @@
 
             const tbody = document.getElementById('lawsTable');
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Keine Gesetze gefunden</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Keine Gesetze gefunden</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = filtered.map(law => `
-                <tr>
-                    <td>${law.category}</td>
-                    <td>${law.paragraph}</td>
-                    <td>${law.title}</td>
-                    <td>$${law.fine_min.toLocaleString()} - $${law.fine_max.toLocaleString()}</td>
-                    <td>${law.jail_min} - ${law.jail_max}</td>
-                    <td>${law.points}</td>
-                    <td>${law.is_felony ? '<span class="badge badge-danger">Ja</span>' : '<span class="badge badge-success">Nein</span>'}</td>
-                    <td>
-                        <div class="actions">
-                            <button class="btn btn-sm" onclick="editLaw(${law.id})" title="Bearbeiten">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="confirmDeleteLaw(${law.id})" title="Löschen">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+            // Group by Category
+            const grouped = filtered.reduce((acc, law) => {
+                (acc[law.category] = acc[law.category] || []).push(law);
+                return acc;
+            }, {});
+
+            // Sort Categories
+            const sortedCategories = Object.keys(grouped).sort();
+
+            tbody.innerHTML = sortedCategories.map(category => {
+                const laws = grouped[category].sort((a, b) => {
+                    // Try to sort naturally by Paragraph (e.g. § 1 before § 10) if possible, else Title
+                    return a.paragraph.localeCompare(b.paragraph, undefined, { numeric: true, sensitivity: 'base' });
+                });
+
+                const headerRow = `
+                    <tr class="category-header">
+                        <td colspan="7">
+                            <i class="fas fa-folder-open" style="margin-right: 8px; opacity: 0.7;"></i>${category}
+                        </td>
+                    </tr>
+                `;
+
+                const lawRows = laws.map(law => `
+                    <tr>
+                        <td style="font-family: monospace; color: var(--accent);">${law.paragraph}</td>
+                        <td style="font-weight: 500;">${law.title}</td>
+                        <td>$${law.fine_min.toLocaleString()} - $${law.fine_max.toLocaleString()}</td>
+                        <td>${law.jail_min} - ${law.jail_max}</td>
+                        <td>${law.points}</td>
+                        <td>${law.is_felony ? '<span class="badge badge-danger">Ja</span>' : '<span class="badge badge-success">Nein</span>'}</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-sm" onclick="editLaw(${law.id})" title="Bearbeiten">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="confirmDeleteLaw(${law.id})" title="Loeschen">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+
+                return headerRow + lawRows;
+            }).join('');
         }
 
         function renderCategories() {
@@ -759,7 +1047,7 @@
                         <button class="btn btn-sm" onclick="editCategory('${cat}')" title="Bearbeiten">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="confirmDeleteCategory('${cat}')" title="Löschen">
+                        <button class="btn btn-sm btn-danger" onclick="confirmDeleteCategory('${cat}')" title="Loeschen">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -769,7 +1057,7 @@
 
         function updateCategorySelect() {
             const select = document.getElementById('lawCategory');
-            select.innerHTML = '<option value="">Kategorie wählen...</option>' +
+            select.innerHTML = '<option value="">Kategorie waehlen...</option>' +
                 allCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
         }
 
@@ -819,9 +1107,9 @@
 
             try {
                 if (id) {
-                    await api(`/api/networks/${currentNetwork.id}/laws/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+                    await api(`/api/laws/${id}`, { method: 'PUT', body: JSON.stringify(data) });
                 } else {
-                    await api(`/api/networks/${currentNetwork.id}/laws`, { method: 'POST', body: JSON.stringify(data) });
+                    await api('/api/laws', { method: 'POST', body: JSON.stringify(data) });
                 }
                 closeModal('lawModal');
                 loadLaws();
@@ -840,7 +1128,7 @@
 
         async function deleteLaw(id) {
             try {
-                await api(`/api/networks/${currentNetwork.id}/laws/${id}`, { method: 'DELETE' });
+                await api(`/api/laws/${id}`, { method: 'DELETE' });
                 closeModal('deleteModal');
                 loadLaws();
                 loadCategories();
@@ -870,12 +1158,12 @@
 
             try {
                 if (oldName) {
-                    await api(`/api/networks/${currentNetwork.id}/law-categories/rename`, {
+                    await api('/api/law-categories/rename', {
                         method: 'PUT',
                         body: JSON.stringify({ oldName, newName })
                     });
                 } else {
-                    await api(`/api/networks/${currentNetwork.id}/law-categories`, {
+                    await api('/api/law-categories', {
                         method: 'POST',
                         body: JSON.stringify({ name: newName })
                     });
@@ -891,7 +1179,10 @@
         function confirmDeleteCategory(name) {
             const count = allLaws.filter(l => l.category === name).length;
             if (count > 0) {
-                alert(`Diese Kategorie enthält ${count} Gesetze und kann nicht gelöscht werden.`);
+                document.getElementById('infoMessage').textContent = `Diese Kategorie enthält ${count} Gesetze und kann nicht gelöscht werden.`;
+                const titleEl = document.querySelector('#infoModal h3');
+                if (titleEl) titleEl.textContent = 'Achtung';
+                openModal('infoModal');
                 return;
             }
             document.getElementById('deleteMessage').textContent = `Sind Sie sicher, dass Sie die Kategorie "${name}" löschen möchten?`;
@@ -901,9 +1192,7 @@
 
         async function deleteCategory(name) {
             try {
-                await api(`/api/networks/${currentNetwork.id}/law-categories/${encodeURIComponent(name)}`, { method: 'DELETE' });
-                closeModal('deleteModal');
-                loadCategories();
+                await api(`/api/law-categories/${encodeURIComponent(name)}`, { method: 'DELETE' });
             } catch (err) {
                 alert('Fehler: ' + err.message);
             }
@@ -911,26 +1200,46 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            // Check authentication
-            const savedNetwork = sessionStorage.getItem('currentNetwork');
-            const adminAuth = sessionStorage.getItem('adminAuth');
-
-            if (!savedNetwork || !adminAuth) {
-                window.location.href = '/';
-                return;
-            }
-
-            currentNetwork = JSON.parse(savedNetwork);
-
-            if (adminAuth !== currentNetwork.id) {
-                window.location.href = '/';
-                return;
-            }
-
-            document.getElementById('networkName').textContent = currentNetwork.name;
             loadLaws();
             loadCategories();
+            loadSettings();
         });
+
+        // ==================== SETTINGS ====================
+        async function loadSettings() {
+            try {
+                const settings = await api('/api/settings');
+                document.getElementById('settingLimitFine').value = settings.limit_fine || 50000;
+                document.getElementById('settingLimitJail').value = settings.limit_jail || 90;
+                document.getElementById('settingTaxJudiciary').value = settings.tax_judiciary || 20;
+                document.getElementById('settingMultiplierCrime').value = settings.multiplier_crime || 1.5;
+                document.getElementById('settingMultiplierTerror').value = settings.multiplier_terror || 2.0;
+            } catch (err) {
+                console.error('Settings load error:', err);
+            }
+        }
+
+        async function saveSettings() {
+            const data = {
+                limit_fine: parseInt(document.getElementById('settingLimitFine').value) || 50000,
+                limit_jail: parseInt(document.getElementById('settingLimitJail').value) || 90,
+                tax_judiciary: parseInt(document.getElementById('settingTaxJudiciary').value) || 20,
+                multiplier_crime: parseFloat(document.getElementById('settingMultiplierCrime').value) || 1.5,
+                multiplier_terror: parseFloat(document.getElementById('settingMultiplierTerror').value) || 2.0
+            };
+
+            try {
+                await api('/api/settings', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+
+                showInfo('Einstellungen erfolgreich gespeichert!');
+            } catch (err) {
+                console.error('Failed to save settings:', err);
+                showInfo('Fehler beim Speichern der Einstellungen.');
+            }
+        }
 
         // Close modal on escape key
         document.addEventListener('keydown', (e) => {
